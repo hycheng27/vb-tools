@@ -17,27 +17,27 @@
       crossorigin="anonymous"
     ></script>
     <!-- Link to index.css -->
-    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="../index.css" />
   </head>
   <body>
     <div class="jumbotron text-center">
-      <h1>My VB Tools</h1>
-      <p>Coding tools to make my life easier :p</p>
+      <h1>Model Generator</h1>
+      <p>Generates models based on SSMS Database table schema output from Visual Studio</p>
+      <a href="../index.html">Back to Home</a>
     </div>
 
     <div class="container">
       <div class="row">
-        <div class="col-sm-4">
-          <h3><a href="tools/model-generator.html">Model Generator</a></h3>
-          <p>Generates models based on SSMS Database table schema output from Visual Studio</p>
+        <div class="col-sm-5">
+          <h4>Input (Table Definition)</h4>
+          <textarea class="form-control" name="convertor-input" rows="20"></textarea>
         </div>
-        <div class="col-sm-4">
-          <h3><a href="">Coming soon...</a></h3>
-          <p>I'll write more if I have the time TT</p>
+        <div class="col-sm-2 d-flex justify-content-center align-items-center">
+          <button type="button" class="btn btn-primary">Convert</button>
         </div>
-        <div class="col-sm-4">
-          <h3><a href="">Coming soon...</a></h3>
-          <p>I'll write more if I have the time TT</p>
+        <div class="col-sm-5">
+          <h4>Output (Model VB Class)</h4>
+          <textarea class="form-control" name="convertor-output" rows="20"></textarea>
         </div>
       </div>
     </div>
