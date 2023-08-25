@@ -19,7 +19,7 @@
     <!-- Link to index.css -->
     <link rel="stylesheet" href="../index.css" />
     <!-- Link to model-generator.js -->
-    <script src="./model-generator.js"></script>
+    <script type="module" src="./model-generator.js"></script>
   </head>
   <body>
     <div class="jumbotron text-center">
@@ -35,7 +35,7 @@
           <textarea class="form-control" id="convertor-input" rows="20"></textarea>
         </div>
         <div class="col-sm-1 d-flex justify-content-center align-items-center">
-          <button type="button" class="btn btn-primary" onclick="onConvertToModel()">Convert</button>
+          <button id="convertor-button" type="button" class="btn btn-primary">Convert</button>
         </div>
         <div class="col-sm-5">
           <h4>Output (Model VB Class)</h4>

@@ -1,3 +1,5 @@
+import { snakeToPascalCase } from '../helper/code-help.js';
+
 function onConvertToModel() {
   // get the input from textarea with id = convertor-input
   var input = document.getElementById('convertor-input').value;
@@ -5,6 +7,10 @@ function onConvertToModel() {
   // --- convert the input to model
 
   // loop through each line
+  if (input == null || input == '') {
+    alert('Please paste the SQL script in the input box.');
+    return;
+  }
   var lines = input.split('\n');
   var i = 0;
   while (!lines[i].includes('CREATE TABLE')) {
@@ -46,22 +52,25 @@ function onConvertToModel() {
   console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  var result = getVbNamespace(tableName, [getVbClassStr(tableName, convertedColumns)]);
+  var result = getVbNamespaceStr(tableName, [getVbClassStr(tableName, convertedColumns)]);
 
   // set the output to textarea with id = convertor-output
   document.getElementById('convertor-output').value = result;
 }
 
+// add event listener to button with id = convertor-button
+document.getElementById('convertor-button').addEventListener('click', onConvertToModel);
+
 // Return the VB namespace string
-function getVbNamespace(tableName, arrBodyStrs) {
-  var header = `Namespace NS${toPascalCase(tableName)}Model`;
+function getVbNamespaceStr(tableName, arrBodyStrs) {
+  var header = `Namespace NS${snakeToPascalCase(tableName)}Model`;
   var footer = `End Namespace`;
   return [header, ...arrBodyStrs, footer].join('\n');
 }
 
 // Return the VB class string
 function getVbClassStr(tableName, convertedColumns) {
-  var header = `Public Class ${toPascalCase(tableName)}Model`;
+  var header = `Public Class ${snakeToPascalCase(tableName)}Model`;
   var footer = `End Class`;
 
   // map convertedColumns to VB properties
@@ -76,7 +85,7 @@ function getVbClassStr(tableName, convertedColumns) {
         nullableStr = '?';
       }
     }
-    return `Public ${toPascalCase(name)} As ${type}${nullableStr}`;
+    return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
   });
 
   // add constructor
@@ -84,12 +93,12 @@ function getVbClassStr(tableName, convertedColumns) {
   var constructorParams = convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
-        return tab + `Optional ${toPascalCase(col.name)} As ${col.type} = Nothing,`;
+        return tab + `Optional ${snakeToPascalCase(col.name)} As ${col.type} = Nothing,`;
       } else {
-        return tab + `Optional ${toPascalCase(col.name)} As ${col.type}? = Nothing,`;
+        return tab + `Optional ${snakeToPascalCase(col.name)} As ${col.type}? = Nothing,`;
       }
     } else {
-      return tab + `${toPascalCase(col.name)} As ${col.type},`;
+      return tab + `${snakeToPascalCase(col.name)} As ${col.type},`;
     }
   });
   // remove the extra comma at the end
@@ -101,7 +110,7 @@ function getVbClassStr(tableName, convertedColumns) {
     ...constructorParams,
     ')',
     ...convertedColumns.map((col) => {
-      return tab + `Me.${toPascalCase(col.name)} = ${toPascalCase(col.name)}`;
+      return tab + `Me.${snakeToPascalCase(col.name)} = ${snakeToPascalCase(col.name)}`;
     }),
     `End Sub`,
   ];
@@ -151,7 +160,6 @@ function convertType(type) {
    * varchar, None
    * xml, None
    */
-  console.log('type:', type);
   switch (type) {
     case 'bigint':
       return 'Int64';
@@ -267,12 +275,4 @@ function convertType(type) {
     default:
       return null;
   }
-}
-
-// convert string from snake_case to PascalCase
-function toPascalCase(str) {
-  return str
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
 }
