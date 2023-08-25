@@ -15,6 +15,11 @@ function onConvertToModel() {
   var i = 0;
   while (!lines[i].includes('CREATE TABLE')) {
     i++;
+
+    if (lines[i] == null) {
+      $('#convertor-output').val('Cannot find CREATE TABLE statement.');
+      return;
+    }
   }
   console.log(`found on line ${i}: ${lines[i]}`);
   var tableNameLine = lines[i];
@@ -55,11 +60,11 @@ function onConvertToModel() {
   var result = getVbNamespaceStr(tableName, [getVbClassStr(tableName, convertedColumns)]);
 
   // set the output to textarea with id = convertor-output
-  document.getElementById('convertor-output').value = result;
+  $('#convertor-output').val(result);
 }
 
-// add event listener to button with id = convertor-button
-document.getElementById('convertor-button').addEventListener('click', onConvertToModel);
+// add event listener to button with id = convertor-copy-button
+$('#convertor-button').click(onConvertToModel);
 
 // Return the VB namespace string
 function getVbNamespaceStr(tableName, arrBodyStrs) {

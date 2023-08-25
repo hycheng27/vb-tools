@@ -18,6 +18,8 @@
     ></script>
     <!-- Link to index.css -->
     <link rel="stylesheet" href="../index.css" />
+    <!-- jquery -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <!-- Link to model-generator.js -->
     <script type="module" src="./model-generator.js"></script>
   </head>
@@ -32,14 +34,14 @@
       <div class="row">
         <div class="col-sm-5">
           <h4>Input (Table Definition)</h4>
-          <textarea class="form-control" id="convertor-input" rows="20"></textarea>
+          <textarea class="form-control" id="convertor-input" rows="20" title="input"></textarea>
         </div>
         <div class="col-sm-1 d-flex justify-content-center align-items-center">
           <button id="convertor-button" type="button" class="btn btn-primary">Convert</button>
         </div>
         <div class="col-sm-5">
           <h4>Output (Model VB Class)</h4>
-          <textarea class="form-control" id="convertor-output" rows="20"></textarea>
+          <textarea class="form-control" id="convertor-output" rows="20" title="output"></textarea>
         </div>
       </div>
     </div>
