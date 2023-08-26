@@ -50,6 +50,11 @@ function onConvertToModel() {
     });
 
     i++;
+
+    if (lines[i] == null) {
+      $('#convertor-output').val('Cannot find CONSTRAINT statement after columns.');
+      return;
+    }
   }
   console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
 
@@ -57,7 +62,7 @@ function onConvertToModel() {
   console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  var result = getVbNamespaceStr(tableName, [getVbClassStr(tableName, convertedColumns)]);
+  var result = getVbNamespaceStr(tableName, getVbClassStrArr(tableName, convertedColumns));
 
   // set the output to textarea with id = convertor-output
   $('#convertor-output').val(result);
@@ -70,16 +75,13 @@ $('#convertor-button').click(onConvertToModel);
 function getVbNamespaceStr(tableName, arrBodyStrs) {
   var header = `Namespace NS${snakeToPascalCase(tableName)}Model`;
   var footer = `End Namespace`;
-  return [header, ...arrBodyStrs, footer].join('\n');
+  return [header, ...writeTabsForArray(arrBodyStrs), footer].join('\n');
 }
 
 // Return the VB class string
-function getVbClassStr(tableName, convertedColumns) {
-  var header = `Public Class ${snakeToPascalCase(tableName)}Model`;
-  var footer = `End Class`;
-
+function getVbClassStrArr(tableName, convertedColumns) {
   // map convertedColumns to VB properties
-  var arrBodyStrs = convertedColumns.map((col) => {
+  var vbColDefs = convertedColumns.map((col) => {
     var type = col.type;
     var name = col.name;
     var nullableStr = '';
@@ -94,33 +96,40 @@ function getVbClassStr(tableName, convertedColumns) {
   });
 
   // add constructor
-  var tab = '    ';
   var constructorParams = convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
-        return tab + `Optional ${snakeToPascalCase(col.name)} As ${col.type} = Nothing,`;
+        return `Optional ${snakeToPascalCase(col.name)} As ${col.type} = Nothing,`;
       } else {
-        return tab + `Optional ${snakeToPascalCase(col.name)} As ${col.type}? = Nothing,`;
+        return `Optional ${snakeToPascalCase(col.name)} As ${col.type}? = Nothing,`;
       }
     } else {
-      return tab + `${snakeToPascalCase(col.name)} As ${col.type},`;
+      return `${snakeToPascalCase(col.name)} As ${col.type},`;
     }
   });
   // remove the extra comma at the end
   constructorParams[constructorParams.length - 1] = constructorParams[constructorParams.length - 1].replace(',', '');
 
+  // add initializers in the constructor
+  var constructorInitializers = convertedColumns.map((col) => {
+    return `Me.${snakeToPascalCase(col.name)} = ${snakeToPascalCase(col.name)}`;
+  });
+
   // add constructor body
   var classConstructor = [
     `Public Sub New(`,
-    ...constructorParams,
+    ...writeTabsForArray(constructorParams),
     ')',
-    ...convertedColumns.map((col) => {
-      return tab + `Me.${snakeToPascalCase(col.name)} = ${snakeToPascalCase(col.name)}`;
-    }),
+    ...writeTabsForArray(constructorInitializers),
     `End Sub`,
   ];
 
-  return [header, ...arrBodyStrs, ...classConstructor, footer].join('\n');
+  return [
+    `Public Class ${snakeToPascalCase(tableName)}Model`,
+    ...writeTabsForArray(vbColDefs),
+    ...writeTabsForArray(classConstructor),
+    `End Class`,
+  ];
 }
 
 function convertType(type) {
@@ -280,4 +289,18 @@ function convertType(type) {
     default:
       return null;
   }
+}
+
+// function to write tabs
+function writeTabs(num = 1) {
+  var result = '';
+  for (var i = 0; i < num; i++) {
+    result += '  ';
+  }
+  return result;
+}
+
+// function to convert a string array to tab + string array
+function writeTabsForArray(arr, tabs = 1) {
+  return arr.map((str) => writeTabs(tabs) + str);
 }
