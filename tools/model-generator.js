@@ -1,4 +1,4 @@
-import { snakeToPascalCase } from '../helper/code-help.js';
+import { snakeToPascalCase, snakeToCamelCase } from '../helper/code-help.js';
 
 function onConvertToModel() {
   // get the input from textarea with id = convertor-input
@@ -35,7 +35,7 @@ function onConvertToModel() {
 
   while (!lines[i].includes('CONSTRAINT')) {
     var line = lines[i];
-    console.log(`processing line ${i}: ${line}`);
+    // console.log(`processing line ${i}: ${line}`);
 
     // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
     var splitted = line.split(' ');
@@ -62,7 +62,11 @@ function onConvertToModel() {
   console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  var result = getVbNamespaceStr(tableName, getVbClassStrArr(tableName, convertedColumns));
+  var result = getVbNamespaceStr(
+    tableName,
+    getVbClassStrArr(tableName, convertedColumns),
+    getVbResClassStrArr(tableName, convertedColumns)
+  );
 
   // set the output to textarea with id = convertor-output
   $('#convertor-output').val(result);
@@ -72,14 +76,24 @@ function onConvertToModel() {
 $('#convertor-button').click(onConvertToModel);
 
 // Return the VB namespace string
-function getVbNamespaceStr(tableName, arrBodyStrs) {
-  var header = `Namespace NS${snakeToPascalCase(tableName)}Model`;
-  var footer = `End Namespace`;
-  return [header, ...writeTabsForArray(arrBodyStrs), footer].join('\n');
+function getVbNamespaceStr(tableName, vbClassStrArr, vbResClassStrArr) {
+  return [
+    `Namespace NS${snakeToPascalCase(tableName)}Model`,
+    ...writeTabsForArray(vbClassStrArr),
+    '',
+    ...writeTabsForArray(vbResClassStrArr),
+    `End Namespace`,
+  ].join('\n');
 }
 
-// Return the VB class string
+// Return the VB class
 function getVbClassStrArr(tableName, convertedColumns) {
+  // filter out column: Id
+  convertedColumns = convertedColumns.filter((col) => col.name !== 'id');
+
+  // constant: table name
+  var vbTableName = `Public Const tableName As String = "${tableName}"`;
+
   // map convertedColumns to VB properties
   var vbColDefs = convertedColumns.map((col) => {
     var type = col.type;
@@ -99,12 +113,12 @@ function getVbClassStrArr(tableName, convertedColumns) {
   var constructorParams = convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
-        return `Optional ${snakeToPascalCase(col.name)} As ${col.type} = Nothing,`;
+        return `Optional ${snakeToCamelCase(col.name)} As ${col.type} = Nothing,`;
       } else {
-        return `Optional ${snakeToPascalCase(col.name)} As ${col.type}? = Nothing,`;
+        return `Optional ${snakeToCamelCase(col.name)} As ${col.type}? = Nothing,`;
       }
     } else {
-      return `${snakeToPascalCase(col.name)} As ${col.type},`;
+      return `${snakeToCamelCase(col.name)} As ${col.type},`;
     }
   });
   // remove the extra comma at the end
@@ -126,6 +140,55 @@ function getVbClassStrArr(tableName, convertedColumns) {
 
   return [
     `Public Class ${snakeToPascalCase(tableName)}Model`,
+    writeTabs() + vbTableName,
+    ...writeTabsForArray(vbColDefs),
+    ...writeTabsForArray(classConstructor),
+    `End Class`,
+  ];
+}
+
+// Return the VB res class
+function getVbResClassStrArr(tableName, convertedColumns) {
+  // map convertedColumns to VB properties
+  var vbColDefs = convertedColumns.map((col) => {
+    var type = col.type;
+    var name = col.name;
+    var nullableStr = ''; // in the res model, every property is nullable
+    if (type === 'String' || type === 'Object') {
+      nullableStr = ' = Nothing';
+    } else {
+      nullableStr = '?';
+    }
+    return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
+  });
+
+  // add constructor
+  // add initializers in the constructor
+  var constructorInitializers = convertedColumns
+    .map((col) => {
+      return [
+        `If cols.Contains("${col.name}") Then`,
+        `  ${snakeToPascalCase(col.name)} = IsNull(row("${col.name}"), Nothing)`,
+        `End If`,
+      ];
+    })
+    .flat();
+
+  // add constructor body (dataRow)
+  var classConstructor = [
+    `Public Sub New(row As DataRow)`,
+    writeTabs() + `Dim cols = row.Table.Columns`,
+    '',
+    ...writeTabsForArray(constructorInitializers),
+    `End Sub`,
+  ];
+
+  return [
+    `''' <summary>`,
+    `''' Every field from <see cref="TenderModel"/> except all of them are optional.<br/>`,
+    `''' Useful for receiving data from DB when not all fields are selected.`,
+    `''' </summary>`,
+    `Public Class Res${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbColDefs),
     ...writeTabsForArray(classConstructor),
     `End Class`,
