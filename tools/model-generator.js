@@ -116,7 +116,19 @@ function getVbClassStrArr(tableName, convertedColumns) {
     return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
   });
 
-  // add constructor
+  // -- add constructor
+
+  // sort the parameters, so that the nullable parameters are at the end
+  convertedColumns.sort((a, b) => {
+    if (a.isNullable && !b.isNullable) {
+      return 1;
+    } else if (!a.isNullable && b.isNullable) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+  // turn into string array
   var constructorParams = convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
@@ -128,6 +140,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
       return `${snakeToCamelCase(col.name)} As ${col.type},`;
     }
   });
+
   // remove the extra comma at the end
   constructorParams[constructorParams.length - 1] = constructorParams[constructorParams.length - 1].replace(',', '');
 
@@ -192,7 +205,7 @@ function getVbResClassStrArr(tableName, convertedColumns) {
 
   return [
     `''' <summary>`,
-    `''' Every field from <see cref="${snakeToPascalCase(tableName)}"/> except all of them are optional.<br/>`,
+    `''' Every field from <see cref="${snakeToPascalCase(tableName)}Model"/> except all of them are optional.<br/>`,
     `''' Useful for receiving data from DB when not all fields are selected.`,
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
