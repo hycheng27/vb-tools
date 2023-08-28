@@ -85,7 +85,7 @@ $('#convertor-button').click(onConvertToModel);
 // Return the VB namespace string
 function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr) {
   return [
-    `Namespace NS${snakeToPascalCase(tableName)}Model`,
+    `Namespace Ns${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbClassStrArr),
     '',
     ...writeTabsForArray(vbResClassStrArr),
