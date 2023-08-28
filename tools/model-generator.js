@@ -33,12 +33,14 @@ function onConvertToModel() {
   i += 1;
   var columns = [];
 
-  while (!lines[i].includes('CONSTRAINT')) {
+  var endingKeywords = ['CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'CHECK', 'DEFAULT', 'END'];
+  while (!endingKeywords.some((keyword) => lines[i].includes(keyword))) {
     var line = lines[i];
     // console.log(`processing line ${i}: ${line}`);
 
     // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
     var splitted = line.split(' ');
+    console.log(`splitted: ${splitted}`);
     var columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
     var columnType = splitted[1].substring(splitted[1].indexOf('[') + 1, splitted[1].indexOf(']'));
     var columnNullable = splitted[2].includes('NULL') ? true : false;
