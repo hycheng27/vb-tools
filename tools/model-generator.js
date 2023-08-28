@@ -33,12 +33,14 @@ function onConvertToModel() {
   i += 1;
   var columns = [];
 
-  while (!lines[i].includes('CONSTRAINT')) {
+  var endingKeywords = ['CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'CHECK', 'DEFAULT', 'END'];
+  while (!endingKeywords.some((keyword) => lines[i].includes(keyword))) {
     var line = lines[i];
     // console.log(`processing line ${i}: ${line}`);
 
     // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
     var splitted = line.split(' ');
+    console.log(`splitted: ${splitted}`);
     var columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
     var columnType = splitted[1].substring(splitted[1].indexOf('[') + 1, splitted[1].indexOf(']'));
     var columnNullable = splitted[2].includes('NULL') ? true : false;
@@ -62,11 +64,16 @@ function onConvertToModel() {
   console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  var result = getVbNamespaceStr(
-    tableName,
-    getVbClassStrArr(tableName, convertedColumns),
-    getVbResClassStrArr(tableName, convertedColumns)
-  );
+  var result = [
+    'Imports System.Data',
+    'Imports ETS.CodeUtils',
+    '',
+    ...getVbNamespaceStrArr(
+      tableName,
+      getVbClassStrArr(tableName, convertedColumns),
+      getVbResClassStrArr(tableName, convertedColumns)
+    ),
+  ].join('\n');
 
   // set the output to textarea with id = convertor-output
   $('#convertor-output').val(result);
@@ -76,14 +83,14 @@ function onConvertToModel() {
 $('#convertor-button').click(onConvertToModel);
 
 // Return the VB namespace string
-function getVbNamespaceStr(tableName, vbClassStrArr, vbResClassStrArr) {
+function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr) {
   return [
-    `Namespace NS${snakeToPascalCase(tableName)}Model`,
+    `Namespace Ns${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbClassStrArr),
     '',
     ...writeTabsForArray(vbResClassStrArr),
     `End Namespace`,
-  ].join('\n');
+  ];
 }
 
 // Return the VB class
@@ -185,7 +192,7 @@ function getVbResClassStrArr(tableName, convertedColumns) {
 
   return [
     `''' <summary>`,
-    `''' Every field from <see cref="TenderModel"/> except all of them are optional.<br/>`,
+    `''' Every field from <see cref="${snakeToPascalCase(tableName)}"/> except all of them are optional.<br/>`,
     `''' Useful for receiving data from DB when not all fields are selected.`,
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
@@ -254,13 +261,13 @@ function convertType(type) {
       return null;
 
     case 'date':
-      return 'DateTime';
+      return 'Date';
 
     case 'datetime':
-      return 'DateTime';
+      return 'Date';
 
     case 'datetime2':
-      return 'DateTime';
+      return 'Date';
 
     case 'DATETIMEOFFSET':
       return 'DateTimeOffset';
