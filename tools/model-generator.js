@@ -261,13 +261,13 @@ function convertType(type) {
       return null;
 
     case 'date':
-      return 'DateTime';
+      return 'Date';
 
     case 'datetime':
-      return 'DateTime';
+      return 'Date';
 
     case 'datetime2':
-      return 'DateTime';
+      return 'Date';
 
     case 'DATETIMEOFFSET':
       return 'DateTimeOffset';
