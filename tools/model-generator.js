@@ -205,7 +205,7 @@ function getVbResClassStrArr(tableName, convertedColumns) {
 
   return [
     `''' <summary>`,
-    `''' Every field from <see cref="${snakeToPascalCase(tableName)}"/> except all of them are optional.<br/>`,
+    `''' Every field from <see cref="${snakeToPascalCase(tableName)}Model"/> except all of them are optional.<br/>`,
     `''' Useful for receiving data from DB when not all fields are selected.`,
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
