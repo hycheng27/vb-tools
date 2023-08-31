@@ -67,6 +67,7 @@ function onConvertToModel() {
   var result = [
     'Imports System.Data',
     'Imports ETS.CodeUtils',
+    'Imports NsInterfaces',
     '',
     ...getVbNamespaceStrArr(
       tableName,
@@ -167,6 +168,10 @@ function getVbClassStrArr(tableName, convertedColumns) {
   ];
 }
 
+function shouldAddNullable(col) {
+  return col.isNullable && col.type !== 'String' && col.type !== 'Object';
+}
+
 // Return the VB res class
 function getVbResClassStrArr(tableName, convertedColumns) {
   // map convertedColumns to VB properties
@@ -182,24 +187,17 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
   });
 
-  // add constructor
-  // add initializers in the constructor
-  var constructorInitializers = convertedColumns
+  // add method: FillModel
+  var propertyInitializers = convertedColumns
     .map((col) => {
-      return [
-        `If cols.Contains("${col.name}") Then`,
-        `  ${snakeToPascalCase(col.name)} = IsNull(row("${col.name}"), Nothing)`,
-        `End If`,
-      ];
-    })
-    .flat();
+      // TenderId = dataRow.Field(Of Integer?)("tender_id")
+      return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${shouldAddNullable(col) ? '?' : ''})("${col.name}")`;
+    });
 
   // add constructor body (dataRow)
-  var classConstructor = [
-    `Public Sub New(row As DataRow)`,
-    writeTabs() + `Dim cols = row.Table.Columns`,
-    '',
-    ...writeTabsForArray(constructorInitializers),
+  var fillModelMethod = [
+    `Public Sub FillModel(dataRow As DataRow) Implements IDataRowFillable.FillModel`,
+    ...writeTabsForArray(propertyInitializers),
     `End Sub`,
   ];
 
@@ -210,7 +208,8 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbColDefs),
-    ...writeTabsForArray(classConstructor),
+    '',
+    ...writeTabsForArray(fillModelMethod),
     `End Class`,
   ];
 }
