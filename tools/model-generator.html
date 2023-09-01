@@ -32,16 +32,52 @@
 
     <div class="container">
       <div class="row">
-        <div class="col-sm-5">
+        <div class="col-sm-5" style="position: relative">
           <h4>Input (Table Definition)</h4>
           <textarea class="form-control" id="convertor-input" rows="20" title="input"></textarea>
+          <div class="d-flex" style="position: absolute; top: 20px; right: 0px">
+            <button
+              type="button"
+              style="width: 36px; height: 36px"
+              class="btn btn-danger d-flex justify-content-center align-items-center p-1 mx-1"
+              title="Clear"
+            >
+              <img src="../assets/svg/clear.svg" alt="clear" class="h-75 w-75" />
+            </button>
+            <button
+              type="button"
+              style="width: 36px; height: 36px"
+              class="btn btn-secondary d-flex justify-content-center align-items-center p-1 mx-1"
+              title="Copy"
+            >
+              <img src="../assets/svg/copy.svg" alt="copy" class="h-100 w-100" />
+            </button>
+          </div>
         </div>
         <div class="col-sm-1 d-flex justify-content-center align-items-center">
           <button id="convertor-button" type="button" class="btn btn-primary">Convert</button>
         </div>
-        <div class="col-sm-5">
+        <div class="col-sm-5" style="position: relative">
           <h4>Output (Model VB Class)</h4>
           <textarea class="form-control" id="convertor-output" rows="20" title="output"></textarea>
+          <div class="d-flex" style="position: absolute; top: 20px; right: 0px">
+            <button
+              type="button"
+              style="width: 36px; height: 36px"
+              class="btn btn-danger d-flex justify-content-center align-items-center p-1 mx-1"
+              title="Clear"
+            >
+              <img src="../assets/svg/clear.svg" alt="clear" class="h-75 w-75" />
+            </button>
+            <button
+              type="button"
+              style="width: 36px; height: 36px"
+              class="btn btn-secondary d-flex justify-content-center align-items-center p-1 mx-1"
+              title="Copy"
+            >
+              <img src="../assets/svg/copy.svg" alt="copy" class="h-100 w-100" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

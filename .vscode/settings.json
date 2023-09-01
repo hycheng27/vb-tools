@@ -6,6 +6,7 @@
     "nvarchar",
     "rowversion",
     "smallmoney",
+    "SSMS",
     "tinyint",
     "uniqueidentifier",
     "varbinary"
