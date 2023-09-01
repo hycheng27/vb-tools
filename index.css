@@ -41,3 +41,9 @@
 a {
   text-decoration: none;
 }
+
+.flexbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

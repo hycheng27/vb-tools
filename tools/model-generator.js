@@ -88,6 +88,24 @@ function onConvertToModel() {
   $('#convertor-output').val(result);
 }
 
+function showSnackbar(text) {
+  // Get the snackbar DIV
+  var x = $('#snackbar')[0];
+
+  // change the text
+  x.innerText = text;
+
+  // Add the "show" class to DIV
+  x.className = 'show';
+
+  // After 3 seconds, remove the show class from DIV
+  setTimeout(function () {
+    x.className = x.className.replace('show', '');
+  }, 3000);
+}
+
+/// Helper functions ///
+
 // Return the VB namespace string
 function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr, vbEnumClassStrArr) {
   return [
@@ -279,13 +297,27 @@ function getVbEnumClass(tableName, convertedColumns) {
   return [...comment, ...enumStrArr];
 }
 
-// add event listeners
+/// End of Helper functions ///
+
+/// Add event listeners ///
 
 // convert model
 $('#convertor-button').click(onConvertToModel);
 
 // copy and clear
-$('#clear-input-btn').click(() => $('#convertor-input').val(''));
-$('#copy-input-btn').click(() => copyToClipboard($('#convertor-input').val()));
-$('#clear-output-btn').click(() => $('#convertor-output').val(''));
-$('#copy-output-btn').click(() => copyToClipboard($('#convertor-output').val()));
+$('#clear-input-btn').click(() => {
+  $('#convertor-input').val('');
+});
+$('#copy-input-btn').click(() => {
+  copyToClipboard($('#convertor-input').val());
+  showSnackbar('Copied input to clipboard.');
+});
+$('#clear-output-btn').click(() => {
+  $('#convertor-output').val('');
+});
+$('#copy-output-btn').click(() => {
+  copyToClipboard($('#convertor-output').val());
+  showSnackbar('Copied output to clipboard.');
+});
+
+/// End of Add event listeners ///
