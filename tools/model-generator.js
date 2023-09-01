@@ -172,7 +172,9 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `}`,
   ];
   // remove the last comma
-  sharedDictionary[sharedDictionary.length - 2] = sharedDictionary[sharedDictionary.length - 2].replace(',', '');
+  let dictLen = sharedDictionary.length;
+  let itemLen = sharedDictionary[dictLen - 2].length;
+  sharedDictionary[dictLen - 2] = sharedDictionary[dictLen - 2].substring(0, itemLen - 1);
 
   // shared function: get column names
   var sharedFunctionGetColNames = [
@@ -196,9 +198,13 @@ function getVbClassStrArr(tableName, convertedColumns) {
   return [
     `Public Class ${snakeToPascalCase(tableName)}Model`,
     writeTabs() + vbTableName,
+    '',
     ...writeTabsForArray(vbColDefs),
+    '',
     ...writeTabsForArray(classConstructor),
+    '',
     ...writeTabsForArray(sharedDictionary),
+    '',
     ...writeTabsForArray(sharedFunctionGetColNames),
     `End Class`,
   ];
@@ -224,11 +230,12 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   });
 
   // add method: FillModel
-  var propertyInitializers = convertedColumns
-    .map((col) => {
-      // TenderId = dataRow.Field(Of Integer?)("tender_id")
-      return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${shouldAddNullable(col) ? '?' : ''})("${col.name}")`;
-    });
+  var propertyInitializers = convertedColumns.map((col) => {
+    // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
+    return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${shouldAddNullable(col) ? '?' : ''})("${
+      col.name
+    }")`;
+  });
 
   // add constructor body (dataRow)
   var fillModelMethod = [
@@ -243,6 +250,8 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     `''' Useful for receiving data from DB when not all fields are selected.`,
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
+    writeTabs() + `Implements IDataRowFillable`,
+    '',
     ...writeTabsForArray(vbColDefs),
     '',
     ...writeTabsForArray(fillModelMethod),
@@ -259,7 +268,7 @@ function getVbEnumClass(tableName, convertedColumns) {
 
   let enumStrArr = [
     `Public Enum Enum${snakeToPascalCase(tableName)}Columns`,
-    ...convertedColumns.map((col, index) => writeTabs() + `${snakeToPascalCase(col.name)} = ${index + 1}`),
+    ...convertedColumns.map((col) => writeTabs() + `${snakeToPascalCase(col.name)}`),
     `End Enum`,
   ];
 
