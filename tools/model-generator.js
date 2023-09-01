@@ -88,9 +88,6 @@ function onConvertToModel() {
   $('#convertor-output').val(result);
 }
 
-// add event listener to button with id = convertor-copy-button
-$('#convertor-button').click(onConvertToModel);
-
 // Return the VB namespace string
 function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr, vbEnumClassStrArr) {
   return [
@@ -281,3 +278,14 @@ function getVbEnumClass(tableName, convertedColumns) {
 
   return [...comment, ...enumStrArr];
 }
+
+// add event listeners
+
+// convert model
+$('#convertor-button').click(onConvertToModel);
+
+// copy and clear
+$('#clear-input-btn').click(() => $('#convertor-input').val(''));
+$('#copy-input-btn').click(() => copyToClipboard($('#convertor-input').val()));
+$('#clear-output-btn').click(() => $('#convertor-output').val(''));
+$('#copy-output-btn').click(() => copyToClipboard($('#convertor-output').val()));
