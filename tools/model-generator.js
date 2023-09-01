@@ -72,7 +72,8 @@ function onConvertToModel() {
     ...getVbNamespaceStrArr(
       tableName,
       getVbClassStrArr(tableName, convertedColumns),
-      getVbResClassStrArr(tableName, convertedColumns)
+      getVbResClassStrArr(tableName, convertedColumns),
+      getVbEnumClass(tableName, convertedColumns)
     ),
   ].join('\n');
 
@@ -84,12 +85,14 @@ function onConvertToModel() {
 $('#convertor-button').click(onConvertToModel);
 
 // Return the VB namespace string
-function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr) {
+function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr, vbEnumClassStrArr) {
   return [
     `Namespace Ns${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbClassStrArr),
     '',
     ...writeTabsForArray(vbResClassStrArr),
+    '',
+    ...writeTabsForArray(vbEnumClassStrArr),
     `End Namespace`,
   ];
 }
@@ -97,13 +100,13 @@ function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr) {
 // Return the VB class
 function getVbClassStrArr(tableName, convertedColumns) {
   // filter out column: Id
-  convertedColumns = convertedColumns.filter((col) => col.name !== 'id');
+  let _convertedColumns = convertedColumns.filter((col) => col.name !== 'id');
 
   // constant: table name
   var vbTableName = `Public Const tableName As String = "${tableName}"`;
 
   // map convertedColumns to VB properties
-  var vbColDefs = convertedColumns.map((col) => {
+  var vbColDefs = _convertedColumns.map((col) => {
     var type = col.type;
     var name = col.name;
     var nullableStr = '';
@@ -120,7 +123,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
   // -- add constructor
 
   // sort the parameters, so that the nullable parameters are at the end
-  convertedColumns.sort((a, b) => {
+  _convertedColumns.sort((a, b) => {
     if (a.isNullable && !b.isNullable) {
       return 1;
     } else if (!a.isNullable && b.isNullable) {
@@ -130,7 +133,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
     }
   });
   // turn into string array
-  var constructorParams = convertedColumns.map((col) => {
+  var constructorParams = _convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
         return `Optional ${snakeToCamelCase(col.name)} As ${col.type} = Nothing,`;
@@ -146,7 +149,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
   constructorParams[constructorParams.length - 1] = constructorParams[constructorParams.length - 1].replace(',', '');
 
   // add initializers in the constructor
-  var constructorInitializers = convertedColumns.map((col) => {
+  var constructorInitializers = _convertedColumns.map((col) => {
     return `Me.${snakeToPascalCase(col.name)} = ${snakeToPascalCase(col.name)}`;
   });
 
@@ -159,11 +162,44 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `End Sub`,
   ];
 
+  // shared dictionary for column names
+  var sharedDictionary = [
+    `Public Shared ReadOnly GetName As New Dictionary(Of Enum${snakeToPascalCase(tableName)}Columns, String) From {`,
+    ...convertedColumns.map(
+      (col) =>
+        writeTabs() + `{Enum${snakeToPascalCase(tableName)}Columns.${snakeToPascalCase(col.name)}, "${col.name}"},`
+    ),
+    `}`,
+  ];
+  // remove the last comma
+  sharedDictionary[sharedDictionary.length - 2] = sharedDictionary[sharedDictionary.length - 2].replace(',', '');
+
+  // shared function: get column names
+  var sharedFunctionGetColNames = [
+    `''' <summary>`,
+    `''' Receives an array of <see cref="Enum${snakeToPascalCase(
+      tableName
+    )}Columns"/> and returns a comma separated string for SQL query columns selection.`,
+    `''' </summary>`,
+    `''' <param name="cols"></param>`,
+    `''' <returns>a comma separated string, e.g. "id, tender_id, created_by"</returns>`,
+    `Public Shared Function GetCommaSeparatedColNames(cols As Enum${snakeToPascalCase(tableName)}Columns()) As String`,
+    `    Dim _list = New List(Of String)`,
+    `    For Each col In cols`,
+    `        _list.Add(GetName(col))`,
+    `    Next`,
+    `    Dim colNames = String.Join(", ", _list.ToArray())`,
+    `    Return colNames`,
+    `End Function`,
+  ];
+
   return [
     `Public Class ${snakeToPascalCase(tableName)}Model`,
     writeTabs() + vbTableName,
     ...writeTabsForArray(vbColDefs),
     ...writeTabsForArray(classConstructor),
+    ...writeTabsForArray(sharedDictionary),
+    ...writeTabsForArray(sharedFunctionGetColNames),
     `End Class`,
   ];
 }
@@ -212,6 +248,22 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     ...writeTabsForArray(fillModelMethod),
     `End Class`,
   ];
+}
+
+function getVbEnumClass(tableName, convertedColumns) {
+  let comment = [
+    `''' <summary>`,
+    `''' Abstracted column names with enums. The indexes are not important.`,
+    `''' </summary>`,
+  ];
+
+  let enumStrArr = [
+    `Public Enum Enum${snakeToPascalCase(tableName)}Columns`,
+    ...convertedColumns.map((col, index) => writeTabs() + `${snakeToPascalCase(col.name)} = ${index + 1}`),
+    `End Enum`,
+  ];
+
+  return [...comment, ...enumStrArr];
 }
 
 function convertType(type) {

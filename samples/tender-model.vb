@@ -126,7 +126,79 @@ Namespace NSTenderModel
             Me.awardedBy = awardedBy
         End Sub
 
+        Public Shared ReadOnly GetName As New Dictionary(Of EnumTenderColumns, String) From {
+            {EnumTenderColumns.id, "id"},
+            {EnumTenderColumns.procurerId, "procurer_id"},
+            {EnumTenderColumns.versionId, "version_id"},
+            {EnumTenderColumns.versionNo, "version_no"},
+            {EnumTenderColumns.status, "status"},
+            {EnumTenderColumns.ref, "ref"},
+            {EnumTenderColumns.subjEng, "subj_eng"},
+            {EnumTenderColumns.subjChi, "subj_chi"},
+            {EnumTenderColumns.contactPersonName, "contact_person_name"},
+            {EnumTenderColumns.contactPersonPosition, "contact_person_position"},
+            {EnumTenderColumns.contactPersonEmailAddress, "contact_person_email_address"},
+            {EnumTenderColumns.dateCreated, "date_created"},
+            {EnumTenderColumns.createdByUserId, "created_by_user_id"},
+            {EnumTenderColumns.createdBy, "created_by"},
+            {EnumTenderColumns.projectId, "project_id"},
+            {EnumTenderColumns.tenderType, "tender_type"},
+            {EnumTenderColumns.restricted, "restricted"},
+            {EnumTenderColumns.issueDate, "issue_date"},
+            {EnumTenderColumns.closingDate, "closing_date"},
+            {EnumTenderColumns.twoStageAssessment, "2stage_assessment"},
+            {EnumTenderColumns.evaluationCriteriaStage1TargetCompletionDate, "evaluation_criteria_stage_1_target_completion_date"},
+            {EnumTenderColumns.evaluationCriteriaStage2TargetCompletionDate, "evaluation_criteria_stage_2_target_completion_date"},
+            {EnumTenderColumns.dateModified, "date_modified"},
+            {EnumTenderColumns.modifiedByUserId, "modified_by_user_id"},
+            {EnumTenderColumns.dateReviewed, "date_reviewed"},
+            {EnumTenderColumns.reviewedByUserId, "reviewed_by_user_id"},
+            {EnumTenderColumns.dateApproved, "date_approved"},
+            {EnumTenderColumns.approvedByUserId, "approved_by_user_id"},
+            {EnumTenderColumns.dateIssued, "date_issued"},
+            {EnumTenderColumns.issuedByUserId, "issued_by_user_id"},
+            {EnumTenderColumns.dateClosed, "date_closed"},
+            {EnumTenderColumns.closedByUserId, "closed_by_user_id"},
+            {EnumTenderColumns.dateAborted, "date_aborted"},
+            {EnumTenderColumns.abortedByUserId, "aborted_by_user_id"},
+            {EnumTenderColumns.dateArchived, "date_archived"},
+            {EnumTenderColumns.dateDearchived, "date_dearchived"},
+            {EnumTenderColumns.dearchivedByUserId, "dearchived_by_user_id"},
+            {EnumTenderColumns.dateAwarded, "date_awarded"},
+            {EnumTenderColumns.awardedByUserId, "awarded_by_user_id"},
+            {EnumTenderColumns.moduleName, "module_name"},
+            {EnumTenderColumns.deptName, "dept_name"},
+            {EnumTenderColumns.evaluationCriteriaId, "evaluation_criteria_id"},
+            {EnumTenderColumns.evaluationCriteriaName, "evaluation_criteria_name"},
+            {EnumTenderColumns.evaluationCriteriaStage1PassingScore, "evaluation_criteria_stage_1_passing_score"},
+            {EnumTenderColumns.evaluationCriteriaStage2PassingScore, "evaluation_criteria_stage_2_passing_score"},
+            {EnumTenderColumns.evaluationCriteriaTechnicalWeighted, "evaluation_criteria_technical_weighted"},
+            {EnumTenderColumns.evaluationCriteriaPriceWeighted, "evaluation_criteria_price_weighted"},
+            {EnumTenderColumns.contactPersonTelNumber, "contact_person_tel_number"},
+            {EnumTenderColumns.contactPersonFaxNumber, "contact_person_fax_number"},
+            {EnumTenderColumns.modifiedBy, "modified_by"},
+            {EnumTenderColumns.reviewedBy, "reviewed_by"},
+            {EnumTenderColumns.approvedBy, "approved_by"},
+            {EnumTenderColumns.issuedBy, "issued_by"},
+            {EnumTenderColumns.closedBy, "closed_by"},
+            {EnumTenderColumns.abortedBy, "aborted_by"},
+            {EnumTenderColumns.dearchivedBy, "dearchived_by"},
+            {EnumTenderColumns.awardedBy, "awarded_by"}
+        }
 
+        ''' <summary>
+        ''' Receives an array of <see cref="EnumTenderColumns"/> and returns a comma separated string for SQL query columns selection.
+        ''' </summary>
+        ''' <param name="cols"></param>
+        ''' <returns>a comma separated string, e.g. "id, tender_id, created_by"</returns>
+        Public Shared Function GetCommaSeparatedColNames(cols As EnumTenderColumns()) As String
+            Dim _list = New List(Of String)
+            For Each col In cols
+                _list.Add(GetName(col))
+            Next
+            Dim colNames = Join(_list.ToArray(), ", ")
+            Return colNames
+        End Function
     End Class
 
     ''' <summary>
@@ -442,89 +514,6 @@ Namespace NSTenderModel
         dearchivedBy
         awardedBy
     End Enum
-
-    ''' <summary>
-    ''' A Helper class for getting string column names for <see cref="TenderModel"/>. Use <see cref="TenderModelColumn.GetName"/>.
-    ''' </summary>
-    Public Class TenderModelColumn
-        ''' <summary>
-        ''' Receives a <see cref="EnumTenderColumns"/> and return the corresponding string name.<br/>
-        ''' e.g. <c>EnumTenderColumns.procurerId</c> will return <c>"procurer_id"</c>
-        ''' </summary>
-        Public Shared ReadOnly GetName As New Dictionary(Of EnumTenderColumns, String) From {
-            {EnumTenderColumns.id, "id"} _
-            , {EnumTenderColumns.procurerId, "procurer_id"} _
-            , {EnumTenderColumns.versionId, "version_id"} _
-            , {EnumTenderColumns.versionNo, "version_no"} _
-            , {EnumTenderColumns.status, "status"} _
-            , {EnumTenderColumns.ref, "ref"} _
-            , {EnumTenderColumns.subjEng, "subj_eng"} _
-            , {EnumTenderColumns.subjChi, "subj_chi"} _
-            , {EnumTenderColumns.contactPersonName, "contact_person_name"} _
-            , {EnumTenderColumns.contactPersonPosition, "contact_person_position"} _
-            , {EnumTenderColumns.contactPersonEmailAddress, "contact_person_email_address"} _
-            , {EnumTenderColumns.dateCreated, "date_created"} _
-            , {EnumTenderColumns.createdByUserId, "created_by_user_id"} _
-            , {EnumTenderColumns.createdBy, "created_by"} _
-            , {EnumTenderColumns.projectId, "project_id"} _
-            , {EnumTenderColumns.tenderType, "tender_type"} _
-            , {EnumTenderColumns.restricted, "restricted"} _
-            , {EnumTenderColumns.issueDate, "issue_date"} _
-            , {EnumTenderColumns.closingDate, "closing_date"} _
-            , {EnumTenderColumns.twoStageAssessment, "2stage_assessment"} _
-            , {EnumTenderColumns.evaluationCriteriaStage1TargetCompletionDate, "evaluation_criteria_stage_1_target_completion_date"} _
-            , {EnumTenderColumns.evaluationCriteriaStage2TargetCompletionDate, "evaluation_criteria_stage_2_target_completion_date"} _
-            , {EnumTenderColumns.dateModified, "date_modified"} _
-            , {EnumTenderColumns.modifiedByUserId, "modified_by_user_id"} _
-            , {EnumTenderColumns.dateReviewed, "date_reviewed"} _
-            , {EnumTenderColumns.reviewedByUserId, "reviewed_by_user_id"} _
-            , {EnumTenderColumns.dateApproved, "date_approved"} _
-            , {EnumTenderColumns.approvedByUserId, "approved_by_user_id"} _
-            , {EnumTenderColumns.dateIssued, "date_issued"} _
-            , {EnumTenderColumns.issuedByUserId, "issued_by_user_id"} _
-            , {EnumTenderColumns.dateClosed, "date_closed"} _
-            , {EnumTenderColumns.closedByUserId, "closed_by_user_id"} _
-            , {EnumTenderColumns.dateAborted, "date_aborted"} _
-            , {EnumTenderColumns.abortedByUserId, "aborted_by_user_id"} _
-            , {EnumTenderColumns.dateArchived, "date_archived"} _
-            , {EnumTenderColumns.dateDearchived, "date_dearchived"} _
-            , {EnumTenderColumns.dearchivedByUserId, "dearchived_by_user_id"} _
-            , {EnumTenderColumns.dateAwarded, "date_awarded"} _
-            , {EnumTenderColumns.awardedByUserId, "awarded_by_user_id"} _
-            , {EnumTenderColumns.moduleName, "module_name"} _
-            , {EnumTenderColumns.deptName, "dept_name"} _
-            , {EnumTenderColumns.evaluationCriteriaId, "evaluation_criteria_id"} _
-            , {EnumTenderColumns.evaluationCriteriaName, "evaluation_criteria_name"} _
-            , {EnumTenderColumns.evaluationCriteriaStage1PassingScore, "evaluation_criteria_stage_1_passing_score"} _
-            , {EnumTenderColumns.evaluationCriteriaStage2PassingScore, "evaluation_criteria_stage_2_passing_score"} _
-            , {EnumTenderColumns.evaluationCriteriaTechnicalWeighted, "evaluation_criteria_technical_weighted"} _
-            , {EnumTenderColumns.evaluationCriteriaPriceWeighted, "evaluation_criteria_price_weighted"} _
-            , {EnumTenderColumns.contactPersonTelNumber, "contact_person_tel_number"} _
-            , {EnumTenderColumns.contactPersonFaxNumber, "contact_person_fax_number"} _
-            , {EnumTenderColumns.modifiedBy, "modified_by"} _
-            , {EnumTenderColumns.reviewedBy, "reviewed_by"} _
-            , {EnumTenderColumns.approvedBy, "approved_by"} _
-            , {EnumTenderColumns.issuedBy, "issued_by"} _
-            , {EnumTenderColumns.closedBy, "closed_by"} _
-            , {EnumTenderColumns.abortedBy, "aborted_by"} _
-            , {EnumTenderColumns.dearchivedBy, "dearchived_by"} _
-            , {EnumTenderColumns.awardedBy, "awarded_by"}
-        }
-
-        ''' <summary>
-        ''' Receives an array of <see cref="EnumTenderColumns"/> and returns a comma separated string for SQL query columns selection.
-        ''' </summary>
-        ''' <param name="cols"></param>
-        ''' <returns>a comma separated string, e.g. "id, tender_id, created_by"</returns>
-        Public Shared Function GetCommaSeparatedColNames(cols As EnumTenderColumns()) As String
-            Dim _list = New List(Of String)
-            For Each col In cols
-                _list.Add(GetName(col))
-            Next
-            Dim colNames = Join(_list.ToArray(), ", ")
-            Return colNames
-        End Function
-    End Class
 
 
 
