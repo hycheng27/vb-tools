@@ -71,7 +71,8 @@ function onConvertToModel() {
     ...getVbNamespaceStrArr(
       tableName,
       getVbClassStrArr(tableName, convertedColumns),
-      getVbResClassStrArr(tableName, convertedColumns)
+      getVbResClassStrArr(tableName, convertedColumns),
+      getVbEnumClass(tableName, convertedColumns)
     ),
   ].join('\n');
 
@@ -83,12 +84,14 @@ function onConvertToModel() {
 $('#convertor-button').click(onConvertToModel);
 
 // Return the VB namespace string
-function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr) {
+function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr, vbEnumClassStrArr) {
   return [
     `Namespace Ns${snakeToPascalCase(tableName)}Model`,
     ...writeTabsForArray(vbClassStrArr),
     '',
     ...writeTabsForArray(vbResClassStrArr),
+    '',
+    ...writeTabsForArray(vbEnumClassStrArr),
     `End Namespace`,
   ];
 }
@@ -213,6 +216,22 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     ...writeTabsForArray(classConstructor),
     `End Class`,
   ];
+}
+
+function getVbEnumClass(tableName, convertedColumns) {
+  let comment = [
+    `''' <summary>`,
+    `''' Abstracted column names with enums. The indexes are not important.`,
+    `''' </summary>`,
+  ];
+
+  let enumStrArr = [
+    `Public Enum Enum${snakeToPascalCase(tableName)}Columns`,
+    ...convertedColumns.map((col, index) => writeTabs() + `${snakeToPascalCase(col.name)} = ${index + 1}`),
+    `End Enum`,
+  ];
+
+  return [...comment, ...enumStrArr];
 }
 
 function convertType(type) {
