@@ -6,6 +6,7 @@ import {
   copyToClipboard,
 } from '../helper/code-help.js';
 import { convertDbToVbType } from '../helper/vb-type-convert.js';
+import { showSnackbar } from '../helper/snackbar.js';
 
 function onConvertToModel() {
   // get the input from textarea with id = convertor-input
@@ -86,22 +87,6 @@ function onConvertToModel() {
 
   // set the output to textarea with id = convertor-output
   $('#convertor-output').val(result);
-}
-
-function showSnackbar(text) {
-  // Get the snackbar DIV
-  var x = $('#snackbar')[0];
-
-  // change the text
-  x.innerText = text;
-
-  // Add the "show" class to DIV
-  x.className = 'show';
-
-  // After 3 seconds, remove the show class from DIV
-  setTimeout(function () {
-    x.className = x.className.replace('show', '');
-  }, 3000);
 }
 
 /// Helper functions ///
