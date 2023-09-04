@@ -10,5 +10,6 @@
     "tinyint",
     "uniqueidentifier",
     "varbinary"
-  ]
+  ],
+  "editor.formatOnSave": true
 }
