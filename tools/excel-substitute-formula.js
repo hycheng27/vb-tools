@@ -9,7 +9,7 @@ function getSubstituteFormula(chars, subToChar, cell, i) {
     return `SUBSTITUTE(${cell},"${chars[i]}","${subToChar}")`;
   } else {
     var chainedFormulas = getSubstituteFormula(chars, subToChar, cell, i - 1);
-    return `SUBSTITUTE(${chainedFormulas},"${chars[i]}","${subToChar}")`;
+    return `SUBSTITUTE(${chainedFormulas},"${chars[i]}","${chars[i] == ')' ? '' : subToChar}")`; // special case for ')': substitute with empty string
   }
 }
 
