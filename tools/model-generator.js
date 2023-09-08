@@ -10,7 +10,7 @@ import { showSnackbar } from '../helper/snackbar.js';
 
 function onConvertToModel() {
   // get the input from textarea with id = convertor-input
-  var input = $('#convertor-input').value;
+  var input = $('#convertor-input').val();
 
   // --- convert the input to model
 
