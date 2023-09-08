@@ -9,7 +9,18 @@ function getSubstituteFormula(chars, subToChar, cell, i) {
     return `SUBSTITUTE(${cell},"${chars[i]}","${subToChar}")`;
   } else {
     var chainedFormulas = getSubstituteFormula(chars, subToChar, cell, i - 1);
-    return `SUBSTITUTE(${chainedFormulas},"${chars[i]}","${chars[i] == ')' ? '' : subToChar}")`; // special case for ')': substitute with empty string
+
+    // special case for ')': substitute with empty string
+    if (chars[i] == ')') {
+      subToChar = '';
+    }
+
+    // special case for '"': escape for excel formula
+    if (chars[i] == '"') {
+      chars[i] = '""';
+    }
+
+    return `SUBSTITUTE(${chainedFormulas},"${chars[i]}","${subToChar}")`; // special case for ')': substitute with empty string
   }
 }
 
