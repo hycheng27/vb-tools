@@ -1,8 +1,16 @@
-import { snakeToPascalCase, snakeToCamelCase } from '../helper/code-help.js';
+import {
+  snakeToPascalCase,
+  snakeToCamelCase,
+  writeTabs,
+  writeTabsForArray,
+  copyToClipboard,
+} from '../helper/code-help.js';
+import { convertDbToVbType } from '../helper/vb-type-convert.js';
+import { showSnackbar } from '../helper/snackbar.js';
 
 function onConvertToModel() {
   // get the input from textarea with id = convertor-input
-  var input = document.getElementById('convertor-input').value;
+  var input = $('#convertor-input').val();
 
   // --- convert the input to model
 
@@ -60,13 +68,14 @@ function onConvertToModel() {
   }
   console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
 
-  var convertedColumns = columns.map((col) => ({ ...col, type: convertType(col.type) ?? '(Unsupported Type)' }));
+  var convertedColumns = columns.map((col) => ({ ...col, type: convertDbToVbType(col.type) ?? '(Unsupported Type)' }));
   console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
   var result = [
     'Imports System.Data',
     'Imports ETS.CodeUtils',
+    'Imports NsInterfaces',
     '',
     ...getVbNamespaceStrArr(
       tableName,
@@ -80,8 +89,7 @@ function onConvertToModel() {
   $('#convertor-output').val(result);
 }
 
-// add event listener to button with id = convertor-copy-button
-$('#convertor-button').click(onConvertToModel);
+/// Helper functions ///
 
 // Return the VB namespace string
 function getVbNamespaceStrArr(tableName, vbClassStrArr, vbResClassStrArr, vbEnumClassStrArr) {
@@ -171,7 +179,9 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `}`,
   ];
   // remove the last comma
-  sharedDictionary[sharedDictionary.length - 2] = sharedDictionary[sharedDictionary.length - 2].replace(',', '');
+  let dictLen = sharedDictionary.length;
+  let itemLen = sharedDictionary[dictLen - 2].length;
+  sharedDictionary[dictLen - 2] = sharedDictionary[dictLen - 2].substring(0, itemLen - 1);
 
   // shared function: get column names
   var sharedFunctionGetColNames = [
@@ -195,12 +205,20 @@ function getVbClassStrArr(tableName, convertedColumns) {
   return [
     `Public Class ${snakeToPascalCase(tableName)}Model`,
     writeTabs() + vbTableName,
+    '',
     ...writeTabsForArray(vbColDefs),
+    '',
     ...writeTabsForArray(classConstructor),
+    '',
     ...writeTabsForArray(sharedDictionary),
+    '',
     ...writeTabsForArray(sharedFunctionGetColNames),
     `End Class`,
   ];
+}
+
+function shouldAddNullable(col) {
+  return col.isNullable && col.type !== 'String' && col.type !== 'Object';
 }
 
 // Return the VB res class
@@ -218,24 +236,18 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
   });
 
-  // add constructor
-  // add initializers in the constructor
-  var constructorInitializers = convertedColumns
-    .map((col) => {
-      return [
-        `If cols.Contains("${col.name}") Then`,
-        `  ${snakeToPascalCase(col.name)} = IsNull(row("${col.name}"), Nothing)`,
-        `End If`,
-      ];
-    })
-    .flat();
+  // add method: FillModel
+  var propertyInitializers = convertedColumns.map((col) => {
+    // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
+    return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${shouldAddNullable(col) ? '?' : ''})("${
+      col.name
+    }")`;
+  });
 
   // add constructor body (dataRow)
-  var classConstructor = [
-    `Public Sub New(row As DataRow)`,
-    writeTabs() + `Dim cols = row.Table.Columns`,
-    '',
-    ...writeTabsForArray(constructorInitializers),
+  var fillModelMethod = [
+    `Public Sub FillModel(dataRow As DataRow) Implements IDataRowFillable.FillModel`,
+    ...writeTabsForArray(propertyInitializers),
     `End Sub`,
   ];
 
@@ -245,8 +257,11 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     `''' Useful for receiving data from DB when not all fields are selected.`,
     `''' </summary>`,
     `Public Class Res${snakeToPascalCase(tableName)}Model`,
+    writeTabs() + `Implements IDataRowFillable`,
+    '',
     ...writeTabsForArray(vbColDefs),
-    ...writeTabsForArray(classConstructor),
+    '',
+    ...writeTabsForArray(fillModelMethod),
     `End Class`,
   ];
 }
@@ -260,182 +275,34 @@ function getVbEnumClass(tableName, convertedColumns) {
 
   let enumStrArr = [
     `Public Enum Enum${snakeToPascalCase(tableName)}Columns`,
-    ...convertedColumns.map((col, index) => writeTabs() + `${snakeToPascalCase(col.name)} = ${index + 1}`),
+    ...convertedColumns.map((col) => writeTabs() + `${snakeToPascalCase(col.name)}`),
     `End Enum`,
   ];
 
   return [...comment, ...enumStrArr];
 }
 
-function convertType(type) {
-  /**
-   * Conversion Table
-   *
-   * bigint, Int64
-   * binary, Byte[]
-   * bit, Boolean
-   * char, None
-   * cursor, None
-   * date, DateTime
-   * datetime, DateTime
-   * datetime2, DateTime
-   * DATETIMEOFFSET, DateTimeOffset
-   * decimal, Decimal
-   * float, Double
-   * geography, None
-   * hierarchyid, None
-   * image, None
-   * int, Integer
-   * money, Decimal
-   * nchar, String
-   * ntext, None
-   * numeric, Decimal
-   * nvarchar, String
-   * nvarchar(1), String
-   * real, Single
-   * rowversion, Byte[]
-   * smallint, Short
-   * smallmoney, Decimal
-   * sql_variant, Object
-   * table, None
-   * text, None
-   * time, TimeSpan
-   * timestamp, None
-   * tinyint, Byte
-   * uniqueidentifier, Guid
-   * User-defined type(UDT), None
-   * varbinary, Byte[]
-   * varbinary(1), Byte[]
-   * varchar, None
-   * xml, None
-   */
-  switch (type) {
-    case 'bigint':
-      return 'Int64';
+/// End of Helper functions ///
 
-    case 'binary':
-      return 'Byte[]';
+/// Add event listeners ///
 
-    case 'bit':
-      return 'Boolean';
+// convert model
+$('#convertor-button').click(onConvertToModel);
 
-    case 'char':
-      return null;
+// copy and clear
+$('#clear-input-btn').click(() => {
+  $('#convertor-input').val('');
+});
+$('#copy-input-btn').click(() => {
+  copyToClipboard($('#convertor-input').val());
+  showSnackbar('Copied input to clipboard.');
+});
+$('#clear-output-btn').click(() => {
+  $('#convertor-output').val('');
+});
+$('#copy-output-btn').click(() => {
+  copyToClipboard($('#convertor-output').val());
+  showSnackbar('Copied output to clipboard.');
+});
 
-    case 'cursor':
-      return null;
-
-    case 'date':
-      return 'Date';
-
-    case 'datetime':
-      return 'Date';
-
-    case 'datetime2':
-      return 'Date';
-
-    case 'DATETIMEOFFSET':
-      return 'DateTimeOffset';
-
-    case 'decimal':
-      return 'Decimal';
-
-    case 'float':
-      return 'Double';
-
-    case 'geography':
-      return null;
-
-    case 'hierarchyid':
-      return null;
-
-    case 'image':
-      return null;
-
-    case 'int':
-      return 'Integer';
-
-    case 'money':
-      return 'Decimal';
-
-    case 'nchar':
-      return 'String';
-
-    case 'ntext':
-      return null;
-
-    case 'numeric':
-      return 'Decimal';
-
-    case 'nvarchar':
-      return 'String';
-
-    case 'nvarchar':
-      return 'String';
-
-    case 'real':
-      return 'Single';
-
-    case 'rowversion':
-      return 'Byte[]';
-
-    case 'smallint':
-      return 'Short';
-
-    case 'smallmoney':
-      return 'Decimal';
-
-    case 'sql_variant':
-      return 'Object';
-
-    case 'table':
-      return null;
-
-    case 'text':
-      return null;
-
-    case 'time':
-      return 'TimeSpan';
-
-    case 'timestamp':
-      return null;
-
-    case 'tinyint':
-      return 'Byte';
-
-    case 'uniqueidentifier':
-      return 'Guid';
-
-    case 'User':
-      return null;
-
-    case 'varbinary':
-      return 'Byte[]';
-
-    case 'varbinary':
-      return 'Byte[]';
-
-    case 'varchar':
-      return 'String';
-
-    case 'xml':
-      return null;
-
-    default:
-      return null;
-  }
-}
-
-// function to write tabs
-function writeTabs(num = 1) {
-  var result = '';
-  for (var i = 0; i < num; i++) {
-    result += '  ';
-  }
-  return result;
-}
-
-// function to convert a string array to tab + string array
-function writeTabsForArray(arr, tabs = 1) {
-  return arr.map((str) => writeTabs(tabs) + str);
-}
+/// End of Add event listeners ///

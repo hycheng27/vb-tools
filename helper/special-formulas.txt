@@ -1,0 +1,48 @@
+// main page (put into column D,E,F, then H for Level 1-4)
+Level 1 : =IF(D89 = "",X88, "_" & MID(D89, LEN(D89) - 2, 2) & "_" & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(IF(LEN(D89) > 50+2-1, LEFT(D89, 50-2-2), LEFT(D89, LEN(D89)-3-2)),"!","_"),"""","_"),"#","_"),"$","_"),"%","_"),"&","_"),"'","_"),"(","_"),")",""),"*","_"),"+","_"),",","_"),"-","_"),".","_"),"…","_"),"/","_"),":","_"),";","_"),"<","_"),"=","_"),">","_")," ","_"),"?","_"),"@","_"),"[","_"),"\","_"),"]","_"),"^","_"),"_","_"),"`","_"),"{","_"),"|","_"),"}","_"),"~","_"))
+Level 2 : =IF(E89 = "",Y88, "_" & MID(E89, LEN(E89) - 4, 4) & "_" & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(IF(LEN(E89) > 50+4-1, LEFT(E89, 50-4-2), LEFT(E89, LEN(E89)-3-4)),"!","_"),"""","_"),"#","_"),"$","_"),"%","_"),"&","_"),"'","_"),"(","_"),")",""),"*","_"),"+","_"),",","_"),"-","_"),".","_"),"…","_"),"/","_"),":","_"),";","_"),"<","_"),"=","_"),">","_")," ","_"),"?","_"),"@","_"),"[","_"),"\","_"),"]","_"),"^","_"),"_","_"),"`","_"),"{","_"),"|","_"),"}","_"),"~","_"))
+Level 3 : =IF(F89 = "",Z88, "_" & MID(F89, LEN(F89) - 7, 7) & "_" & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(IF(LEN(F89) > 50+7-1, LEFT(F89, 50-7-2), LEFT(F89, LEN(F89)-3-7)),"!","_"),"""","_"),"#","_"),"$","_"),"%","_"),"&","_"),"'","_"),"(","_"),")",""),"*","_"),"+","_"),",","_"),"-","_"),".","_"),"…","_"),"/","_"),":","_"),";","_"),"<","_"),"=","_"),">","_")," ","_"),"?","_"),"@","_"),"[","_"),"\","_"),"]","_"),"^","_"),"_","_"),"`","_"),"{","_"),"|","_"),"}","_"),"~","_"))
+Level 4 : =IF(H89 = "",AA88, "_" & MID(H89, LEN(H89) - 10, 10) & "_" & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(IF(LEN(H89) > 50+10-1, LEFT(H89, 50-10-2), LEFT(H89, LEN(H89)-3-10)),"!","_"),"""","_"),"#","_"),"$","_"),"%","_"),"&","_"),"'","_"),"(","_"),")",""),"*","_"),"+","_"),",","_"),"-","_"),".","_"),"…","_"),"/","_"),":","_"),";","_"),"<","_"),"=","_"),">","_")," ","_"),"?","_"),"@","_"),"[","_"),"\","_"),"]","_"),"^","_"),"_","_"),"`","_"),"{","_"),"|","_"),"}","_"),"~","_"))
+
+// ^ brief explanation:
+// - If the target cell is empty, use the value from the cell above the formula cell.
+// - Take the code of the item from the key using MID()
+// - substitute special characters in the key name, if the key name is too long (>51 characters) it will be cut to 50 characters in the result
+// - put the code at the front and key name at the end, e.g. _12_example_item
+
+// ^ Explain IF(LEN(D89) > 50+2-1, LEFT(D89, 50-2-2), LEFT(D89, LEN(D89)-3-2)) [Level 1 formula]:
+// - if length of the key is longer than 51, it needs to be cut
+// -- the limit is actually 50, but any key length <= 51 will automatically be translated to a new key with <= 50 characters because of the removal of open/close quote, see example below (Example: key with 51 characters)
+// - when cutting, leave space for the key code and 2 underscore characters, for level 1 it is 4 characters in total => (50-2-2)
+
+// item master lookup table
+="_" & MID(B3, LEN(B3) - LEN(C3), LEN(C3)) & "_" & SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(IF(LEN(B3) > 50+LEN(C3)-1, LEFT(B3, 50-LEN(C3)-2), LEFT(B3, LEN(B3)-3-LEN(C3))),"!","_"),"""","_"),"#","_"),"$","_"),"%","_"),"&","_"),"'","_"),"(","_"),")",""),"*","_"),"+","_"),",","_"),"-","_"),".","_"),"…","_"),"/","_"),":","_"),";","_"),"<","_"),"=","_"),">","_")," ","_"),"?","_"),"@","_"),"[","_"),"\","_"),"]","_"),"^","_"),"_","_"),"`","_"),"{","_"),"|","_"),"}","_"),"~","_")
+
+// ^ brief explanation:
+// - same logic as the last section but without the if part
+// - C3 stores the code part of the name, so could directly use its length instead of hard code 2,4,7,10
+
+// Example: key with 10 characters
+abcde (12)
+=> 12_abcde
+
+// Example: key with 52 characters
+// - no need for cutting, since it will naturally be converted to 50 characters (the open/close quote)
+...abcde (1234567890) -> 52 characters
+=> 1234567890_...abcde -> 50 characters
+
+// Example: key with 100 characters
+abcdefg...qwerty (1234432156) -> 100 characters
+=> abcdefg...cutinhalf_1234432156 -> 50 characters
+
+100 - 13 = 87
+87 - 50 + 2 = 39
+
+50 - 3 = 47
+50 - 5 = 45
+50 - 8 = 43
+50 - 11 = 39
+
+1102001005_Prohibitory_hatched_traffic_island_line
+
+0401001003_Allow_for_carrying_out_all_test_require

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>VB-Tools: Model Generator</title>
+    <title>VB-Tools: Excel Substitute Formula</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- bootstrap -->
@@ -21,23 +21,64 @@
     <link rel="stylesheet" href="./snackbar.css" />
     <!-- jquery -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <!-- Link to model-generator.js -->
-    <script type="module" src="./model-generator.js"></script>
+    <!-- Link to excel-substitute-formula.js -->
+    <script type="module" src="./excel-substitute-formula.js"></script>
   </head>
   <body>
     <!-- A hidden snackbar -->
     <div id="snackbar">This text will be replaced by javascript</div>
 
     <div class="jumbotron text-center">
-      <h1>Model Generator</h1>
-      <p>Generates models based on SSMS Database table schema output from Visual Studio</p>
+      <h1>Excel Substitute Formula</h1>
+      <p>Generates an excel formula to substitute multiple characters in a cell</p>
       <a href="../index.html">Back to Home</a>
     </div>
 
     <div class="flexbox px-5">
-      <div style="position: relative; flex: 1">
-        <h4>Input (Table Definition)</h4>
-        <textarea class="mt-4 form-control" id="convertor-input" rows="20" title="input"></textarea>
+      <div class="flexbox col-flex" style="position: relative; flex: 1">
+        <h4>Input (characters to be substituted)</h4>
+        <textarea
+          class="mt-4 form-control"
+          id="convertor-input"
+          rows="17"
+          title="Characters to be substituted"
+          placeholder="e.g.&#10;(&#10;*&#10;)&#10;;&#10;:&#10;/&#10;-&#10;,"
+        >
+!
+"
+#
+$
+%
+&
+'
+(
+)
+*
++
+,
+-
+.
+…
+/
+:
+;
+&lt;
+=
+&gt;
+ 
+?
+@
+[
+\
+]
+^
+_
+`
+{
+|
+}
+~</textarea
+        >
         <div class="d-flex" style="position: absolute; top: 30px; right: 0px">
           <button
             id="clear-input-btn"
@@ -58,12 +99,33 @@
             <img src="../assets/svg/copy.svg" alt="copy" class="h-100 w-100" />
           </button>
         </div>
+        <div class="flexbox w-100">
+          <div class="flexbox col-flex w-100 me-1">
+            <p class="mt-1 mb-0">Substitute Character</p>
+            <input
+              class="mt-1 form-control me-1"
+              id="convertor-input-substitute-char"
+              title="The character to substitute to"
+              placeholder="e.g. '_'"
+              value="_"
+            />
+          </div>
+          <div class="flexbox col-flex w-100 ms-1">
+            <p class="mt-1 mb-0">Cell</p>
+            <input
+              class="mt-1 form-control"
+              id="convertor-input-cell"
+              title="The excel cell to substitute"
+              placeholder="e.g. A1"
+            />
+          </div>
+        </div>
       </div>
       <div class="flexbox m-2">
         <button id="convertor-button" type="button" class="btn btn-primary">Convert</button>
       </div>
       <div style="position: relative; flex: 1">
-        <h4>Output (Model VB Class)</h4>
+        <h4>Output (Excel formula)</h4>
         <textarea class="mt-4 form-control" id="convertor-output" rows="20" title="output"></textarea>
         <div class="d-flex" style="position: absolute; top: 30px; right: 0px">
           <button

@@ -41,3 +41,13 @@
 a {
   text-decoration: none;
 }
+
+.flexbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.col-flex {
+  flex-direction: column;
+  align-items: start;
+}
