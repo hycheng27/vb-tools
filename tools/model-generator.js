@@ -217,10 +217,6 @@ function getVbClassStrArr(tableName, convertedColumns) {
   ];
 }
 
-function shouldAddNullable(col) {
-  return col.isNullable && col.type !== 'String' && col.type !== 'Object';
-}
-
 // Return the VB res class
 function getVbResClassStrArr(tableName, convertedColumns) {
   // map convertedColumns to VB properties
@@ -239,9 +235,9 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   // add method: FillModel
   var propertyInitializers = convertedColumns.map((col) => {
     // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
-    return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${shouldAddNullable(col) ? '?' : ''})("${
-      col.name
-    }")`;
+    return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${
+      col.type === 'String' || col.type === 'Object' ? '' : '?'
+    })("${col.name}")`;
   });
 
   // add constructor body (dataRow)
