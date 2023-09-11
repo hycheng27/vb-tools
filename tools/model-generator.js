@@ -1,11 +1,5 @@
-import {
-  snakeToPascalCase,
-  snakeToCamelCase,
-  writeTabs,
-  writeTabsForArray,
-  copyToClipboard,
-} from '../helper/code-help.js';
-import { convertDbToVbType } from '../helper/vb-type-convert.js';
+import { snakeToPascalCase, writeTabs, writeTabsForArray, copyToClipboard } from '../helper/code-help.js';
+import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
 
 function onConvertToModel() {
@@ -69,7 +63,7 @@ function onConvertToModel() {
   console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
 
   var convertedColumns = columns.map((col) => ({ ...col, type: convertDbToVbType(col.type) ?? '(Unsupported Type)' }));
-  console.log('convertedColumns:', convertedColumns);
+  // console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
   var result = [
@@ -124,7 +118,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
         nullableStr = '?';
       }
     }
-    return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
+    return `Public ${toVbPropertyName(name)} As ${type}${nullableStr}`;
   });
 
   // -- add constructor
@@ -143,12 +137,12 @@ function getVbClassStrArr(tableName, convertedColumns) {
   var constructorParams = _convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
-        return `Optional ${snakeToCamelCase(col.name)} As ${col.type} = Nothing,`;
+        return `Optional ${toVbParamName(col.name)} As ${col.type} = Nothing,`;
       } else {
-        return `Optional ${snakeToCamelCase(col.name)} As ${col.type}? = Nothing,`;
+        return `Optional ${toVbParamName(col.name)} As ${col.type}? = Nothing,`;
       }
     } else {
-      return `${snakeToCamelCase(col.name)} As ${col.type},`;
+      return `${toVbParamName(col.name)} As ${col.type},`;
     }
   });
 
@@ -157,7 +151,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
 
   // add initializers in the constructor
   var constructorInitializers = _convertedColumns.map((col) => {
-    return `Me.${snakeToPascalCase(col.name)} = ${snakeToPascalCase(col.name)}`;
+    return `Me.${toVbPropertyName(col.name)} = ${toVbParamName(col.name)}`;
   });
 
   // add constructor body
@@ -174,7 +168,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `Public Shared ReadOnly GetName As New Dictionary(Of Enum${snakeToPascalCase(tableName)}Columns, String) From {`,
     ...convertedColumns.map(
       (col) =>
-        writeTabs() + `{Enum${snakeToPascalCase(tableName)}Columns.${snakeToPascalCase(col.name)}, "${col.name}"},`
+        writeTabs() + `{Enum${snakeToPascalCase(tableName)}Columns.${toVbPropertyName(col.name)}, "${col.name}"},`
     ),
     `}`,
   ];
@@ -229,13 +223,13 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     } else {
       nullableStr = '?';
     }
-    return `Public ${snakeToPascalCase(name)} As ${type}${nullableStr}`;
+    return `Public ${toVbPropertyName(name)} As ${type}${nullableStr}`;
   });
 
   // add method: FillModel
   var propertyInitializers = convertedColumns.map((col) => {
     // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
-    return `Me.${snakeToPascalCase(col.name)} = dataRow.Field(Of ${col.type}${
+    return `Me.${toVbPropertyName(col.name)} = dataRow.Field(Of ${col.type}${
       col.type === 'String' || col.type === 'Object' ? '' : '?'
     })("${col.name}")`;
   });
@@ -271,7 +265,7 @@ function getVbEnumClass(tableName, convertedColumns) {
 
   let enumStrArr = [
     `Public Enum Enum${snakeToPascalCase(tableName)}Columns`,
-    ...convertedColumns.map((col) => writeTabs() + `${snakeToPascalCase(col.name)}`),
+    ...convertedColumns.map((col) => writeTabs() + `${toVbPropertyName(col.name)}`),
     `End Enum`,
   ];
 
