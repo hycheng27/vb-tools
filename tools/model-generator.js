@@ -83,6 +83,35 @@ function onConvertToModel() {
   $('#convertor-output').val(result);
 }
 
+function onUploadModelFile() {
+  // get the file input from input with id = model-file
+  var file = $('#model-file').prop('files')[0];
+
+  // alert if no file
+  if (file == null) {
+    alert('Please select a file.');
+    return;
+  }
+
+  // Setup the file reader
+  var reader = new FileReader();
+
+  reader.onload = function (e) {
+    var lines = e.target.result.split('\n');
+    // read the file line by line
+    for (var i = 0; i < lines.length; i++) {
+      console.log(lines[i]);
+    }
+  };
+
+  reader.onerror = function (e) {
+    console.error(`🚨 ~ FileReader error:`, e);
+  };
+
+  // Read the file
+  reader.readAsText(file);
+}
+
 /// Helper functions ///
 
 // Return the VB namespace string
@@ -294,5 +323,8 @@ $('#copy-output-btn').click(() => {
   copyToClipboard($('#convertor-output').val());
   showSnackbar('Copied output to clipboard.');
 });
+
+// upload model file
+$('#model-file-upload').click(onUploadModelFile);
 
 /// End of Add event listeners ///
