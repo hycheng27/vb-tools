@@ -1,51 +1,68 @@
-import { snakeToPascalCase, writeTabs, writeTabsForArray, copyToClipboard } from '../helper/code-help.js';
+import {
+  snakeToPascalCase,
+  writeTabs,
+  writeTabsForArray,
+  copyToClipboard,
+  createModelFileForDownload,
+} from '../helper/code-help.js';
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
 
-function onConvertToModel() {
-  // get the input from textarea with id = convertor-input
-  var input = $('#convertor-input').val();
+function onConvertToModel(...args) {
+  let isFileUpload = typeof args[0] === 'string';
+  let input = null;
+
+  if (!isFileUpload) {
+    // get the input from textarea with id = convertor-input
+    input = $('#convertor-input').val();
+  } else {
+    input = args[0];
+  }
 
   // --- convert the input to model
 
   // loop through each line
   if (input == null || input == '') {
-    alert('Please paste the SQL script in the input box.');
+    alert(isFileUpload ? 'Please upload an SQL script.' : 'Please paste the SQL script in the input box.');
     return;
   }
-  var lines = input.split('\n');
-  var i = 0;
+  let lines = input.split('\n');
+  let i = 0;
   while (!lines[i].includes('CREATE TABLE')) {
     i++;
 
     if (lines[i] == null) {
-      $('#convertor-output').val('Cannot find CREATE TABLE statement.');
+      if (isFileUpload) {
+        alert('Cannot find CREATE TABLE statement in the uploaded file.');
+      } else {
+        $('#convertor-output').val('Cannot find CREATE TABLE statement.');
+      }
       return;
     }
   }
   console.log(`found on line ${i}: ${lines[i]}`);
-  var tableNameLine = lines[i];
+  let tableNameLine = lines[i];
 
   // get the index of the second '[', then get the table name with substring.
-  var j = tableNameLine.indexOf('[', tableNameLine.indexOf('[') + 1);
-  var tableName = tableNameLine.substring(j + 1, tableNameLine.length - 2);
-  console.log(`table name: ${tableName}`);
+  let nameStart = tableNameLine.indexOf('[', tableNameLine.indexOf('[') + 1) + 1;
+  let nameEnd = tableNameLine.indexOf(']', nameStart);
+  let tableName = tableNameLine.substring(nameStart, nameEnd);
 
   // loop the table columns
   i += 1;
-  var columns = [];
+  let columns = [];
 
-  var endingKeywords = ['CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'CHECK', 'DEFAULT', 'END'];
+  let endingKeywords = ['CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'CHECK', 'DEFAULT', 'END'];
   while (!endingKeywords.some((keyword) => lines[i].includes(keyword))) {
-    var line = lines[i];
+    let line = lines[i];
     // console.log(`processing line ${i}: ${line}`);
 
     // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
-    var splitted = line.split(' ');
+    let splitted = line.trim().split(' ');
     console.log(`splitted: ${splitted}`);
-    var columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
-    var columnType = splitted[1].substring(splitted[1].indexOf('[') + 1, splitted[1].indexOf(']'));
-    var columnNullable = splitted[2].includes('NULL') ? true : false;
+    let columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
+    let columnType = splitted[1].substring(splitted[1].indexOf('[') + 1, splitted[1].indexOf(']'));
+    let columnNullable = splitted[2].includes('NULL') ? true : false;
 
     columns.push({
       name: columnName,
@@ -56,17 +73,21 @@ function onConvertToModel() {
     i++;
 
     if (lines[i] == null) {
-      $('#convertor-output').val('Cannot find CONSTRAINT statement after columns.');
+      if (isFileUpload) {
+        alert('Cannot find CONSTRAINT statement in the uploaded file.');
+      } else {
+        $('#convertor-output').val('Cannot find CONSTRAINT statement after columns.');
+      }
       return;
     }
   }
   console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
 
-  var convertedColumns = columns.map((col) => ({ ...col, type: convertDbToVbType(col.type) ?? '(Unsupported Type)' }));
+  let convertedColumns = columns.map((col) => ({ ...col, type: convertDbToVbType(col.type) ?? '(Unsupported Type)' }));
   // console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  var result = [
+  let result = [
     'Imports System.Data',
     'Imports ETS.CodeUtils',
     'Imports NsInterfaces',
@@ -79,13 +100,17 @@ function onConvertToModel() {
     ),
   ].join('\n');
 
-  // set the output to textarea with id = convertor-output
-  $('#convertor-output').val(result);
+  if (!isFileUpload) {
+    // set the output to textarea with id = convertor-output
+    $('#convertor-output').val(result);
+  } else {
+    createModelFileForDownload(result, tableName);
+  }
 }
 
 function onUploadModelFile() {
   // get the file input from input with id = model-file
-  var file = $('#model-file').prop('files')[0];
+  let file = $('#model-file').prop('files')[0];
 
   // alert if no file
   if (file == null) {
@@ -94,14 +119,11 @@ function onUploadModelFile() {
   }
 
   // Setup the file reader
-  var reader = new FileReader();
+  let reader = new FileReader();
 
   reader.onload = function (e) {
-    var lines = e.target.result.split('\n');
-    // read the file line by line
-    for (var i = 0; i < lines.length; i++) {
-      console.log(lines[i]);
-    }
+    let lines = e.target.result;
+    onConvertToModel(lines);
   };
 
   reader.onerror = function (e) {
@@ -133,13 +155,13 @@ function getVbClassStrArr(tableName, convertedColumns) {
   let _convertedColumns = convertedColumns.filter((col) => col.name !== 'id');
 
   // constant: table name
-  var vbTableName = `Public Const tableName As String = "${tableName}"`;
+  let vbTableName = `Public Const tableName As String = "${tableName}"`;
 
   // map convertedColumns to VB properties
-  var vbColDefs = _convertedColumns.map((col) => {
-    var type = col.type;
-    var name = col.name;
-    var nullableStr = '';
+  let vbColDefs = _convertedColumns.map((col) => {
+    let type = col.type;
+    let name = col.name;
+    let nullableStr = '';
     if (col.isNullable) {
       if (type === 'String' || type === 'Object') {
         nullableStr = ' = Nothing';
@@ -163,7 +185,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
     }
   });
   // turn into string array
-  var constructorParams = _convertedColumns.map((col) => {
+  let constructorParams = _convertedColumns.map((col) => {
     if (col.isNullable) {
       if (col.type === 'String' || col.type === 'Object') {
         return `Optional ${toVbParamName(col.name)} As ${col.type} = Nothing,`;
@@ -179,12 +201,12 @@ function getVbClassStrArr(tableName, convertedColumns) {
   constructorParams[constructorParams.length - 1] = constructorParams[constructorParams.length - 1].replace(',', '');
 
   // add initializers in the constructor
-  var constructorInitializers = _convertedColumns.map((col) => {
+  let constructorInitializers = _convertedColumns.map((col) => {
     return `Me.${toVbPropertyName(col.name)} = ${toVbParamName(col.name)}`;
   });
 
   // add constructor body
-  var classConstructor = [
+  let classConstructor = [
     `Public Sub New(`,
     ...writeTabsForArray(constructorParams),
     ')',
@@ -193,7 +215,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
   ];
 
   // shared dictionary for column names
-  var sharedDictionary = [
+  let sharedDictionary = [
     `Public Shared ReadOnly GetName As New Dictionary(Of Enum${snakeToPascalCase(tableName)}Columns, String) From {`,
     ...convertedColumns.map(
       (col) =>
@@ -207,7 +229,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
   sharedDictionary[dictLen - 2] = sharedDictionary[dictLen - 2].substring(0, itemLen - 1);
 
   // shared function: get column names
-  var sharedFunctionGetColNames = [
+  let sharedFunctionGetColNames = [
     `''' <summary>`,
     `''' Receives an array of <see cref="Enum${snakeToPascalCase(
       tableName
@@ -243,10 +265,10 @@ function getVbClassStrArr(tableName, convertedColumns) {
 // Return the VB res class
 function getVbResClassStrArr(tableName, convertedColumns) {
   // map convertedColumns to VB properties
-  var vbColDefs = convertedColumns.map((col) => {
-    var type = col.type;
-    var name = col.name;
-    var nullableStr = ''; // in the res model, every property is nullable
+  let vbColDefs = convertedColumns.map((col) => {
+    let type = col.type;
+    let name = col.name;
+    let nullableStr = ''; // in the res model, every property is nullable
     if (type === 'String' || type === 'Object') {
       nullableStr = ' = Nothing';
     } else {
@@ -256,7 +278,7 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   });
 
   // add method: FillModel
-  var propertyInitializers = convertedColumns.map((col) => {
+  let propertyInitializers = convertedColumns.map((col) => {
     // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
     return `Me.${toVbPropertyName(col.name)} = dataRow.Field(Of ${col.type}${
       col.type === 'String' || col.type === 'Object' ? '' : '?'
@@ -264,7 +286,7 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   });
 
   // add constructor body (dataRow)
-  var fillModelMethod = [
+  let fillModelMethod = [
     `Public Sub FillModel(dataRow As DataRow) Implements IDataRowFillable.FillModel`,
     ...writeTabsForArray(propertyInitializers),
     `End Sub`,

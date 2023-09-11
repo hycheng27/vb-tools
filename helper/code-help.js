@@ -32,3 +32,29 @@ export function writeTabsForArray(arr, tabs = 1) {
 export function copyToClipboard(str) {
   navigator.clipboard.writeText(str);
 }
+
+export function createModelFileForDownload(str, tableName) {
+  // create a new blob object with the contents of the file
+  var blob = new Blob([str], { type: 'text/plain;charset=utf-8' });
+
+  // create a new URL object for the blob
+  var url = URL.createObjectURL(blob);
+
+  // create a new anchor tag with the URL and filename
+  var $link = $('<a>', {
+    href: url,
+    download: `${tableName}.vb`,
+  });
+
+  // add the anchor tag to the document
+  $('body').append($link);
+
+  // trigger a click event on the anchor tag to start the download
+  $link[0].click();
+
+  // remove the anchor tag from the document
+  $link.remove();
+
+  // release the URL object
+  URL.revokeObjectURL(url);
+}
