@@ -1,3 +1,44 @@
+import { snakeToCamelCase, snakeToPascalCase } from './code-help.js';
+
+const sqlServerToDotNetTypes = {
+  bigint: 'Int64',
+  binary: 'Byte[]',
+  bit: 'Boolean',
+  char: null,
+  cursor: null,
+  date: 'Date',
+  datetime: 'Date',
+  datetime2: 'Date',
+  DATETIMEOFFSET: 'DateTimeOffset',
+  decimal: 'Decimal',
+  float: 'Double',
+  geography: null,
+  hierarchyid: null,
+  image: null,
+  int: 'Integer',
+  money: 'Decimal',
+  nchar: 'String',
+  ntext: null,
+  numeric: 'Decimal',
+  nvarchar: 'String',
+  real: 'Single',
+  rowversion: 'Byte[]',
+  smallint: 'Short',
+  smallmoney: 'Decimal',
+  sql_variant: 'Object',
+  table: null,
+  text: null,
+  time: 'TimeSpan',
+  timestamp: 'Date',
+  tinyint: 'Byte',
+  uniqueidentifier: 'Guid',
+  'User-defined type(UDT)': null,
+  varbinary: 'Byte[]',
+  'varbinary(1)': 'Byte[]',
+  varchar: 'String',
+  xml: null,
+};
+
 export function convertDbToVbType(type) {
   /**
    * Conversion Table
@@ -40,119 +81,108 @@ export function convertDbToVbType(type) {
    * varchar, None
    * xml, None
    */
-  switch (type) {
-    case 'bigint':
-      return 'Int64';
+  return sqlServerToDotNetTypes[type] ?? null;
+}
 
-    case 'binary':
-      return 'Byte[]';
+const vbKeywords = [
+  'step',
+  'module',
+  'class',
+  'object',
+  'string',
+  'integer',
+  'decimal',
+  'double',
+  'date',
+  'boolean',
+  'char',
+  'byte',
+  'short',
+  'long',
+  'single',
+  'variant',
+  'currency',
+  'object',
+  'error',
+  'boolean',
+  'byte',
+  'currency',
+  'date',
+  'decimal',
+  'double',
+  'integer',
+  'long',
+  'object',
+  'short',
+  'single',
+  'string',
+  'variant',
+  'empty',
+  'null',
+  'nothing',
+  'true',
+  'false',
+  'and',
+  'as',
+  'byref',
+  'byval',
+  'case',
+  'const',
+  'dim',
+  'do',
+  'each',
+  'else',
+  'elseif',
+  'end',
+  'error',
+  'exit',
+  'false',
+  'for',
+  'function',
+  'goto',
+  'if',
+  'in',
+  'loop',
+  'me',
+  'mod',
+  'new',
+  'next',
+  'not',
+  'nothing',
+  'on',
+  'option',
+  'or',
+  'private',
+  'public',
+  'redim',
+  'resume',
+  'select',
+  'set',
+  'sub',
+  'then',
+  'to',
+  'true',
+  'until',
+  'wend',
+  'while',
+  'with',
+  'xor',
+];
 
-    case 'bit':
-      return 'Boolean';
+export function toVbPropertyName(dbColName) {
+  dbColName = snakeToPascalCase(dbColName);
 
-    case 'char':
-      return null;
-
-    case 'cursor':
-      return null;
-
-    case 'date':
-      return 'Date';
-
-    case 'datetime':
-      return 'Date';
-
-    case 'datetime2':
-      return 'Date';
-
-    case 'DATETIMEOFFSET':
-      return 'DateTimeOffset';
-
-    case 'decimal':
-      return 'Decimal';
-
-    case 'float':
-      return 'Double';
-
-    case 'geography':
-      return null;
-
-    case 'hierarchyid':
-      return null;
-
-    case 'image':
-      return null;
-
-    case 'int':
-      return 'Integer';
-
-    case 'money':
-      return 'Decimal';
-
-    case 'nchar':
-      return 'String';
-
-    case 'ntext':
-      return null;
-
-    case 'numeric':
-      return 'Decimal';
-
-    case 'nvarchar':
-      return 'String';
-
-    case 'nvarchar':
-      return 'String';
-
-    case 'real':
-      return 'Single';
-
-    case 'rowversion':
-      return 'Byte[]';
-
-    case 'smallint':
-      return 'Short';
-
-    case 'smallmoney':
-      return 'Decimal';
-
-    case 'sql_variant':
-      return 'Object';
-
-    case 'table':
-      return null;
-
-    case 'text':
-      return null;
-
-    case 'time':
-      return 'TimeSpan';
-
-    case 'timestamp':
-      return null;
-
-    case 'tinyint':
-      return 'Byte';
-
-    case 'uniqueidentifier':
-      return 'Guid';
-
-    case 'User':
-      return null;
-
-    case 'varbinary':
-      return 'Byte[]';
-
-    case 'varbinary':
-      return 'Byte[]';
-
-    case 'varchar':
-      return 'String';
-
-    case 'xml':
-      return null;
-
-    default:
-      return null;
+  if (vbKeywords.includes(dbColName.toLowerCase())) {
+    dbColName = `[${dbColName}]`;
   }
+  return dbColName;
+}
+
+export function toVbParamName(dbColName) {
+  dbColName = snakeToCamelCase(dbColName);
+
+  if (vbKeywords.includes(dbColName.toLowerCase())) {
+    dbColName = `[${dbColName}]`;
+  }
+  return dbColName;
 }
