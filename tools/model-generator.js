@@ -279,7 +279,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `''' <returns>a comma separated string, e.g. "id, tender_id, created_by"</returns>`,
     `Public Shared Function GetCommaSeparatedColNames(cols As Enum${snakeToPascalCase(tableName)}Columns()) As String`,
     `    Dim _list = New List(Of String)`,
-    `    For Each col In cols`,
+    `    For Each col As Enum${snakeToPascalCase(tableName)}Columns In cols`,
     `        _list.Add(GetName(col))`,
     `    Next`,
     `    Dim colNames = String.Join(", ", _list.ToArray())`,
