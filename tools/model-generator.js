@@ -4,6 +4,7 @@ import {
   writeTabsForArray,
   copyToClipboard,
   createModelFileForDownload,
+  saveAsFileAndDownload,
 } from '../helper/code-help.js';
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
@@ -158,6 +159,14 @@ function onUploadModelFile() {
           }
         } else {
           addToConvertorOutput(`A total of ${vbModelResults.length} files are generated.`);
+
+          // generate a log file (txt)
+          let dateStr = new Date().toLocaleString('zh-HK', { hour12: false });
+          let fileDateStr = dateStr.replace(/( |,|:|\/)/g, '-');
+          saveAsFileAndDownload(
+            dateStr + '\n\n' + $('#convertor-output').val(),
+            fileDateStr + '-model-generation-log.txt'
+          );
         }
       }
 
