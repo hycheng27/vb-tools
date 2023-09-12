@@ -4,7 +4,6 @@ import {
   writeTabsForArray,
   copyToClipboard,
   createModelFileForDownload,
-  pause,
 } from '../helper/code-help.js';
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
