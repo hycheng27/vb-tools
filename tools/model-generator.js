@@ -30,8 +30,9 @@ function onConvertToModel(inputStr) {
       return [false, { tableName: '', vbModel: '', error: 'Cannot find CREATE TABLE statement.' }];
     }
   }
-  console.log(`found on line ${i}: ${lines[i]}`);
+  // console.log(`found on line ${i}: ${lines[i]}`);
   let tableNameLine = lines[i];
+  console.debug('🚀 ~ tableNameLine:', tableNameLine);
 
   // get the index of the second '[', then get the table name with substring.
   let nameStart = tableNameLine.indexOf('[', tableNameLine.indexOf('[') + 1) + 1;
@@ -50,7 +51,7 @@ function onConvertToModel(inputStr) {
 
     // split the string according to the expected structure
     let splitted = line.trim().split(' ');
-    console.log(`splitted: ${splitted}`);
+    // console.log(`splitted: ${splitted}`);
     let columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
     let columnType = splitted[1].substring(splitted[1].indexOf('[') + 1, splitted[1].indexOf(']'));
     let columnNullable = splitted[2].includes('NULL') ? true : false;
@@ -67,7 +68,7 @@ function onConvertToModel(inputStr) {
       break;
     }
   }
-  console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
+  // console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
 
   let convertedColumns = columns.map((col) => ({ ...col, type: convertDbToVbType(col.type) ?? '(Unsupported Type)' }));
   // console.log('convertedColumns:', convertedColumns);
@@ -123,37 +124,36 @@ function onUploadModelFile() {
       if (isSuccess) {
         vbModelResults.push(result);
       } else {
-        let existingOutput = $('#convertor-output').val();
-        if (existingOutput.length > 0) {
-          existingOutput += '\n';
-        }
-        $('#convertor-output').val(
-          `${existingOutput}File error: at table ${i} (${result.tableName}):\n${result.error}`
-        );
+        addToConvertorOutput(`File error: at table ${i} (${result.tableName}):\n${result.error}`);
       }
     }
     // generate and download successful files
-    function downloadModelFilesWithDelay(vbModelResults, delay) {
+    function downloadModelFilesWithDelay(vbModelResults) {
       let i = 0;
+      const batchSize = 10; // limited by chrome
+      const waitTime = 1000; // limited by chrome
 
       function downloadNextFile() {
-        let existingOutput = $('#convertor-output').val();
-        if (existingOutput.length > 0) {
-          existingOutput += '\n';
-        }
         if (i < vbModelResults.length) {
           let result = vbModelResults[i];
-          createModelFileForDownload(result.vbModel, result.tableName);
-          $('#convertor-output').val(`${existingOutput}File ${result.tableName}.vb is generated.`);
+          createModelFileForDownload(result.vbModel, snakeToPascalCase(result.tableName));
+          addToConvertorOutput(`(${i + 1}) File ${snakeToPascalCase(result.tableName)}.vb is generated.`);
           i++;
-          setTimeout(downloadNextFile, delay);
+
+          if (i % batchSize === 0) {
+            addToConvertorOutput(`-- Batch ${i / batchSize} is done. --`);
+            setTimeout(downloadNextFile, waitTime);
+          } else {
+            downloadNextFile();
+          }
+        } else {
+          addToConvertorOutput(`A total of ${vbModelResults.length} files are generated.`);
         }
       }
 
       downloadNextFile();
     }
-    let filesPerSec = 4;
-    downloadModelFilesWithDelay(vbModelResults, 1000 / filesPerSec);
+    downloadModelFilesWithDelay(vbModelResults);
   };
 
   reader.onerror = function (e) {
@@ -351,6 +351,14 @@ function getVbEnumClass(tableName, convertedColumns) {
   ];
 
   return [...comment, ...enumStrArr];
+}
+
+function addToConvertorOutput(str) {
+  let existingOutput = $('#convertor-output').val();
+  if (existingOutput.length > 0) {
+    existingOutput += '\n';
+  }
+  $('#convertor-output').val(`${existingOutput}${str}`);
 }
 
 /// End of Helper functions ///
