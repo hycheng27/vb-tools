@@ -111,6 +111,17 @@ function onUploadModelFile() {
       $('#convertor-output').val(`File error: No SQL Script found.`);
       return;
     }
+    if (tableSqls.length > 10) {
+      if (
+        !confirm(
+          `Discovered ${tableSqls.length - 1} tables in the sql. Are you sure you want to generate ${
+            tableSqls.length - 1
+          } files?`
+        )
+      ) {
+        return;
+      }
+    }
 
     // clear the output once
     $('#convertor-output').val('');
