@@ -1,87 +1,41 @@
 import { snakeToCamelCase, snakeToPascalCase } from './code-help.js';
 
 const sqlServerToDotNetTypes = {
-  bigint: 'Int64',
-  binary: 'Byte[]',
+  bigint: 'Long',
+  binary: 'Byte()',
   bit: 'Boolean',
-  char: null,
-  cursor: null,
+  char: 'String',
   date: 'Date',
   datetime: 'Date',
   datetime2: 'Date',
   DATETIMEOFFSET: 'DateTimeOffset',
   decimal: 'Decimal',
+  filestream: 'Byte()',
   float: 'Double',
-  geography: null,
-  hierarchyid: null,
-  image: null,
+  image: 'Byte()',
   int: 'Integer',
   money: 'Decimal',
   nchar: 'String',
-  ntext: null,
+  ntext: 'String',
   numeric: 'Decimal',
   nvarchar: 'String',
   real: 'Single',
-  rowversion: 'Byte[]',
+  rowversion: 'Byte()',
+  smalldatetime: 'Date',
   smallint: 'Short',
   smallmoney: 'Decimal',
-  sql_variant: 'Object',
-  table: null,
-  text: null,
+  text: 'String',
   time: 'TimeSpan',
-  timestamp: 'Date',
+  timestamp: 'Byte()',
   tinyint: 'Byte',
   uniqueidentifier: 'Guid',
-  'User-defined type(UDT)': null,
-  varbinary: 'Byte[]',
-  'varbinary(1)': 'Byte[]',
+  varbinary: 'Byte()',
   varchar: 'String',
-  xml: null,
+  xml: 'String',
 };
 
 export function convertDbToVbType(type) {
-  /**
-   * Conversion Table
-   *
-   * bigint, Int64
-   * binary, Byte[]
-   * bit, Boolean
-   * char, None
-   * cursor, None
-   * date, DateTime
-   * datetime, DateTime
-   * datetime2, DateTime
-   * DATETIMEOFFSET, DateTimeOffset
-   * decimal, Decimal
-   * float, Double
-   * geography, None
-   * hierarchyid, None
-   * image, None
-   * int, Integer
-   * money, Decimal
-   * nchar, String
-   * ntext, None
-   * numeric, Decimal
-   * nvarchar, String
-   * nvarchar(1), String
-   * real, Single
-   * rowversion, Byte[]
-   * smallint, Short
-   * smallmoney, Decimal
-   * sql_variant, Object
-   * table, None
-   * text, None
-   * time, TimeSpan
-   * timestamp, None
-   * tinyint, Byte
-   * uniqueidentifier, Guid
-   * User-defined type(UDT), None
-   * varbinary, Byte[]
-   * varbinary(1), Byte[]
-   * varchar, None
-   * xml, None
-   */
-  return sqlServerToDotNetTypes[type] ?? null;
+  return sqlServerToDotNetTypes[type] ?? 'Object';
 }
 
 const vbKeywords = [
