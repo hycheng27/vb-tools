@@ -52,12 +52,13 @@ function onConvertToModel(...args) {
   i += 1;
   let columns = [];
 
-  let endingKeywords = ['CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'CHECK', 'DEFAULT', 'END'];
-  while (!endingKeywords.some((keyword) => lines[i].includes(keyword))) {
+  // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
+  let pattern = /\[\w*\] \[\w*\].*(NULL|NOT NULL)/;
+  while (RegExp(pattern).test(lines[i])) {
     let line = lines[i];
     // console.log(`processing line ${i}: ${line}`);
 
-    // Expected structure: [column name] [column type] [NULL|NOT NULL] [DEFAULT|NULL]],
+    // split the string according to the expected structure
     let splitted = line.trim().split(' ');
     console.log(`splitted: ${splitted}`);
     let columnName = splitted[0].substring(splitted[0].indexOf('[') + 1, splitted[0].indexOf(']'));
