@@ -1,4 +1,4 @@
-import { snakeToCamelCase, snakeToPascalCase } from './code-help.js';
+import { snakeToCamelCase, snakeToPascalCase, digitToEnglishWord } from './code-help.js';
 
 const sqlServerToDotNetTypes = {
   bigint: 'Long',
@@ -36,6 +36,17 @@ const sqlServerToDotNetTypes = {
 
 export function convertDbToVbType(type) {
   return sqlServerToDotNetTypes[type] ?? 'Object';
+}
+
+/** handle weird column names starting with a digit */
+function handleSpecialColName(colName) {
+  if (colName[0].match(/\d/)) {
+    // replace the first digit with its English word
+    let digit = colName[0];
+    return `${digitToEnglishWord(digit)}_${colName.substring(1)}`;
+  } else {
+    return colName;
+  }
 }
 
 const vbKeywords = [
@@ -124,6 +135,7 @@ const vbKeywords = [
 ];
 
 export function toVbPropertyName(dbColName) {
+  dbColName = handleSpecialColName(dbColName);
   dbColName = snakeToPascalCase(dbColName);
 
   if (vbKeywords.includes(dbColName.toLowerCase())) {
@@ -133,6 +145,7 @@ export function toVbPropertyName(dbColName) {
 }
 
 export function toVbParamName(dbColName) {
+  dbColName = handleSpecialColName(dbColName);
   dbColName = snakeToCamelCase(dbColName);
 
   if (vbKeywords.includes(dbColName.toLowerCase())) {

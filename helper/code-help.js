@@ -15,10 +15,11 @@ export function snakeToCamelCase(str) {
 }
 
 // function to write tabs
+const TAB = '    ';
 export function writeTabs(num = 1) {
   var result = '';
   for (var i = 0; i < num; i++) {
-    result += '  ';
+    result += TAB;
   }
   return result;
 }
@@ -57,4 +58,42 @@ export function createModelFileForDownload(str, tableName) {
 
   // release the URL object
   URL.revokeObjectURL(url);
+}
+
+/**
+ * pause for a number of milliseconds, default to 1000
+ * @param {number} msec milliseconds
+ * @returns {Promise} a promise that resolves after msec
+ */
+export function pause(msec) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, msec || 1000);
+  });
+}
+
+export function digitToEnglishWord(digit) {
+  switch (digit) {
+    case '0':
+      return 'zero';
+    case '1':
+      return 'one';
+    case '2':
+      return 'two';
+    case '3':
+      return 'three';
+    case '4':
+      return 'four';
+    case '5':
+      return 'five';
+    case '6':
+      return 'six';
+    case '7':
+      return 'seven';
+    case '8':
+      return 'eight';
+    case '9':
+      return 'nine';
+    default:
+      return digit;
+  }
 }
