@@ -8,36 +8,25 @@ import {
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
 
-function onConvertToModel(...args) {
-  let isFileUpload = typeof args[0] === 'string';
-  let input = null;
-
-  if (!isFileUpload) {
-    // get the input from textarea with id = convertor-input
-    input = $('#convertor-input').val();
-  } else {
-    input = args[0];
-  }
-
+/**
+ * Convert the SQL script to VB model.
+ * @param {string} inputStr the sql script output from ssms server, to be converted into vb model
+ * @returns {[boolean, {tableName: string, vbModel: string, error: string}]} is success, the result object.
+ */
+function onConvertToModel(inputStr) {
   // --- convert the input to model
 
   // loop through each line
-  if (input == null || input == '') {
-    alert(isFileUpload ? 'Please upload an SQL script.' : 'Please paste the SQL script in the input box.');
-    return;
+  if (inputStr == null || inputStr == '') {
+    return [false, { tableName: '', vbModel: '', error: 'No SQL Script found.' }];
   }
-  let lines = input.split('\n');
+  let lines = inputStr.split('\n');
   let i = 0;
   while (!lines[i].includes('CREATE TABLE')) {
     i++;
 
     if (lines[i] == null) {
-      if (isFileUpload) {
-        alert('Cannot find CREATE TABLE statement in the uploaded file.');
-      } else {
-        $('#convertor-output').val('Cannot find CREATE TABLE statement.');
-      }
-      return;
+      return [false, { tableName: '', vbModel: '', error: 'Cannot find CREATE TABLE statement.' }];
     }
   }
   console.log(`found on line ${i}: ${lines[i]}`);
@@ -74,12 +63,7 @@ function onConvertToModel(...args) {
     i++;
 
     if (lines[i] == null) {
-      if (isFileUpload) {
-        alert('Cannot find CONSTRAINT statement in the uploaded file.');
-      } else {
-        $('#convertor-output').val('Cannot find CONSTRAINT statement after columns.');
-      }
-      return;
+      break;
     }
   }
   console.log(`found last column line ${i - 1}: ${lines[i - 1]}`);
@@ -88,7 +72,7 @@ function onConvertToModel(...args) {
   // console.log('convertedColumns:', convertedColumns);
 
   // --- generate the output
-  let result = [
+  let vbModel = [
     'Imports System.Data',
     'Imports ETS.CodeUtils',
     'Imports NsInterfaces',
@@ -101,12 +85,7 @@ function onConvertToModel(...args) {
     ),
   ].join('\n');
 
-  if (!isFileUpload) {
-    // set the output to textarea with id = convertor-output
-    $('#convertor-output').val(result);
-  } else {
-    createModelFileForDownload(result, tableName);
-  }
+  return [true, { tableName, vbModel, error: '' }];
 }
 
 function onUploadModelFile() {
@@ -124,7 +103,12 @@ function onUploadModelFile() {
 
   reader.onload = function (e) {
     let lines = e.target.result;
-    onConvertToModel(lines);
+    let [isSuccess, result] = onConvertToModel(lines);
+    if (isSuccess) {
+      createModelFileForDownload(result.vbModel, result.tableName);
+    } else {
+      alert(`Error while reading file:\n${result.error}`);
+    }
   };
 
   reader.onerror = function (e) {
@@ -329,7 +313,15 @@ function getVbEnumClass(tableName, convertedColumns) {
 /// Add event listeners ///
 
 // convert model
-$('#convertor-button').click(onConvertToModel);
+$('#convertor-button').click(() => {
+  let input = $('#convertor-input').val();
+  let [isSuccess, result] = onConvertToModel(input);
+  if (isSuccess) {
+    $('#convertor-output').val(result.vbModel);
+  } else {
+    $('#convertor-output').val(result.error);
+  }
+});
 
 // copy and clear
 $('#clear-input-btn').click(() => {
