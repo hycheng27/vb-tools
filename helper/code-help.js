@@ -58,3 +58,14 @@ export function createModelFileForDownload(str, tableName) {
   // release the URL object
   URL.revokeObjectURL(url);
 }
+
+/**
+ * pause for a number of milliseconds, default to 1000
+ * @param {number} msec milliseconds
+ * @returns {Promise} a promise that resolves after msec
+ */
+export function pause(msec) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, msec || 1000);
+  });
+}

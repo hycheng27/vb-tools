@@ -4,6 +4,7 @@ import {
   writeTabsForArray,
   copyToClipboard,
   createModelFileForDownload,
+  pause,
 } from '../helper/code-help.js';
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
@@ -103,12 +104,56 @@ function onUploadModelFile() {
 
   reader.onload = function (e) {
     let lines = e.target.result;
-    let [isSuccess, result] = onConvertToModel(lines);
-    if (isSuccess) {
-      createModelFileForDownload(result.vbModel, result.tableName);
-    } else {
-      alert(`Error while reading file:\n${result.error}`);
+
+    // separate with 'CREATE TABLE' as delimiter
+    let tableSqls = lines.split('CREATE TABLE');
+    if (tableSqls.length <= 1) {
+      $('#convertor-output').val(`File error: No SQL Script found.`);
+      return;
     }
+
+    // clear the output once
+    $('#convertor-output').val('');
+
+    let vbModelResults = [];
+    for (let i = 1; i < tableSqls.length; i++) {
+      tableSqls[i] = 'CREATE TABLE' + tableSqls[i];
+      let [isSuccess, result] = onConvertToModel(tableSqls[i]);
+
+      if (isSuccess) {
+        vbModelResults.push(result);
+      } else {
+        let existingOutput = $('#convertor-output').val();
+        if (existingOutput.length > 0) {
+          existingOutput += '\n';
+        }
+        $('#convertor-output').val(
+          `${existingOutput}File error: at table ${i} (${result.tableName}):\n${result.error}`
+        );
+      }
+    }
+    // generate and download successful files
+    function downloadModelFilesWithDelay(vbModelResults, delay) {
+      let i = 0;
+
+      function downloadNextFile() {
+        let existingOutput = $('#convertor-output').val();
+        if (existingOutput.length > 0) {
+          existingOutput += '\n';
+        }
+        if (i < vbModelResults.length) {
+          let result = vbModelResults[i];
+          createModelFileForDownload(result.vbModel, result.tableName);
+          $('#convertor-output').val(`${existingOutput}File ${result.tableName}.vb is generated.`);
+          i++;
+          setTimeout(downloadNextFile, delay);
+        }
+      }
+
+      downloadNextFile();
+    }
+    let filesPerSec = 4;
+    downloadModelFilesWithDelay(vbModelResults, 1000 / filesPerSec);
   };
 
   reader.onerror = function (e) {
