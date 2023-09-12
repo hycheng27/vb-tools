@@ -1,10 +1,14 @@
 {
   "cSpell.words": [
     "cref",
+    "datetime",
+    "DATETIMEOFFSET",
+    "filestream",
     "hierarchyid",
     "ntext",
     "nvarchar",
     "rowversion",
+    "smalldatetime",
     "smallmoney",
     "SSMS",
     "tinyint",
