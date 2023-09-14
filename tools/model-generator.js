@@ -334,6 +334,8 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     })("${col.name}")`;
   });
 
+  let resClassConstructor = [`Public Sub New(row As DataRow)`, writeTabs() + `FillModel(row)`, `End Sub`];
+
   // add constructor body (dataRow)
   let fillModelMethod = [
     `Public Sub FillModel(dataRow As DataRow) Implements IDataRowFillable.FillModel`,
@@ -350,6 +352,8 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     writeTabs() + `Implements IDataRowFillable`,
     '',
     ...writeTabsForArray(vbColDefs),
+    '',
+    ...writeTabsForArray(resClassConstructor),
     '',
     ...writeTabsForArray(fillModelMethod),
     `End Class`,
