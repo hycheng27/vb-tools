@@ -334,7 +334,43 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     })("${col.name}")`;
   });
 
-  let resClassConstructor = [`Public Sub New(row As DataRow)`, writeTabs() + `FillModel(row)`, `End Sub`];
+  // explicit default constructor
+  let explicitDefaultConstructor = [
+    `''' <summary>`,
+    `''' Explicit default constructor`,
+    `''' </summary>`,
+    `Public Sub New()`,
+    `End Sub`,
+  ];
+
+  // add constructor body (dataRow)
+  let resClassConstructor = [
+    `''' <summary>`,
+    `''' Constructor from a DataRow.`,
+    `''' </summary>`,
+    `''' <param name="row"></param>`,
+    `Public Sub New(row As DataRow)`,
+    writeTabs() + `FillModel(row)`,
+    `End Sub`,
+  ];
+
+  // add constructor body (model, optional id)
+  let initializers = convertedColumns.map((col) => {
+    if (col.name === 'id') {
+      return `Me.Id = id`;
+    }
+    return `Me.${toVbPropertyName(col.name)} = model.${toVbPropertyName(col.name)}`;
+  });
+  let resClassConstructorFromModel = [
+    `''' <summary>`,
+    `''' Constructor from <see cref="${snakeToPascalCase(tableName)}Model"/>.`,
+    `''' </summary>`,
+    `''' <param name="model"></param>`,
+    `''' <param name="id"></param>`,
+    `Public Sub New(model As ${snakeToPascalCase(tableName)}Model, Optional id As Integer? = Nothing)`,
+    ...writeTabsForArray(initializers),
+    `End Sub`,
+  ];
 
   // add constructor body (dataRow)
   let fillModelMethod = [
@@ -353,7 +389,11 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     '',
     ...writeTabsForArray(vbColDefs),
     '',
+    ...writeTabsForArray(explicitDefaultConstructor),
+    '',
     ...writeTabsForArray(resClassConstructor),
+    '',
+    ...writeTabsForArray(resClassConstructorFromModel),
     '',
     ...writeTabsForArray(fillModelMethod),
     `End Class`,
