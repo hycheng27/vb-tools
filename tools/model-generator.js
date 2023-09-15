@@ -329,9 +329,10 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   // add method: FillModel
   let propertyInitializers = convertedColumns.map((col) => {
     // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
-    return `Me.${toVbPropertyName(col.name)} = dataRow.Field(Of ${col.type}${
+    // changed to SafeGetDataColumn in utils to also check column exist before getting
+    return `Me.${toVbPropertyName(col.name)} = SafeGetDataColumn(Of ${col.type}${
       col.type === 'String' || col.type === 'Object' ? '' : '?'
-    })("${col.name}")`;
+    })(dataRow, "${col.name}")`;
   });
 
   // explicit default constructor
