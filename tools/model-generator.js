@@ -4,6 +4,7 @@ import {
   writeTabsForArray,
   copyToClipboard,
   createModelFileForDownload,
+  saveAsFileAndDownload,
 } from '../helper/code-help.js';
 import { convertDbToVbType, toVbPropertyName, toVbParamName } from '../helper/vb-type-convert.js';
 import { showSnackbar } from '../helper/snackbar.js';
@@ -158,6 +159,14 @@ function onUploadModelFile() {
           }
         } else {
           addToConvertorOutput(`A total of ${vbModelResults.length} files are generated.`);
+
+          // generate a log file (txt)
+          let dateStr = new Date().toLocaleString('zh-HK', { hour12: false });
+          let fileDateStr = dateStr.replace(/( |,|:|\/)/g, '-');
+          saveAsFileAndDownload(
+            dateStr + '\n\n' + $('#convertor-output').val(),
+            fileDateStr + '-model-generation-log.txt'
+          );
         }
       }
 
@@ -279,7 +288,7 @@ function getVbClassStrArr(tableName, convertedColumns) {
     `''' <returns>a comma separated string, e.g. "id, tender_id, created_by"</returns>`,
     `Public Shared Function GetCommaSeparatedColNames(cols As Enum${snakeToPascalCase(tableName)}Columns()) As String`,
     `    Dim _list = New List(Of String)`,
-    `    For Each col In cols`,
+    `    For Each col As Enum${snakeToPascalCase(tableName)}Columns In cols`,
     `        _list.Add(GetName(col))`,
     `    Next`,
     `    Dim colNames = String.Join(", ", _list.ToArray())`,
@@ -320,10 +329,49 @@ function getVbResClassStrArr(tableName, convertedColumns) {
   // add method: FillModel
   let propertyInitializers = convertedColumns.map((col) => {
     // Example: TenderId = dataRow.Field(Of Integer?)("tender_id")
-    return `Me.${toVbPropertyName(col.name)} = dataRow.Field(Of ${col.type}${
+    // changed to SafeGetDataColumn in utils to also check column exist before getting
+    return `Me.${toVbPropertyName(col.name)} = SafeGetDataColumn(Of ${col.type}${
       col.type === 'String' || col.type === 'Object' ? '' : '?'
-    })("${col.name}")`;
+    })(dataRow, "${col.name}")`;
   });
+
+  // explicit default constructor
+  let explicitDefaultConstructor = [
+    `''' <summary>`,
+    `''' Explicit default constructor`,
+    `''' </summary>`,
+    `Public Sub New()`,
+    `End Sub`,
+  ];
+
+  // add constructor body (dataRow)
+  let resClassConstructor = [
+    `''' <summary>`,
+    `''' Constructor from a DataRow.`,
+    `''' </summary>`,
+    `''' <param name="row"></param>`,
+    `Public Sub New(row As DataRow)`,
+    writeTabs() + `FillModel(row)`,
+    `End Sub`,
+  ];
+
+  // add constructor body (model, optional id)
+  let initializers = convertedColumns.map((col) => {
+    if (col.name === 'id') {
+      return `Me.Id = id`;
+    }
+    return `Me.${toVbPropertyName(col.name)} = model.${toVbPropertyName(col.name)}`;
+  });
+  let resClassConstructorFromModel = [
+    `''' <summary>`,
+    `''' Constructor from <see cref="${snakeToPascalCase(tableName)}Model"/>.`,
+    `''' </summary>`,
+    `''' <param name="model"></param>`,
+    `''' <param name="id"></param>`,
+    `Public Sub New(model As ${snakeToPascalCase(tableName)}Model, Optional id As Integer? = Nothing)`,
+    ...writeTabsForArray(initializers),
+    `End Sub`,
+  ];
 
   // add constructor body (dataRow)
   let fillModelMethod = [
@@ -341,6 +389,12 @@ function getVbResClassStrArr(tableName, convertedColumns) {
     writeTabs() + `Implements IDataRowFillable`,
     '',
     ...writeTabsForArray(vbColDefs),
+    '',
+    ...writeTabsForArray(explicitDefaultConstructor),
+    '',
+    ...writeTabsForArray(resClassConstructor),
+    '',
+    ...writeTabsForArray(resClassConstructorFromModel),
     '',
     ...writeTabsForArray(fillModelMethod),
     `End Class`,

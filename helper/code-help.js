@@ -34,9 +34,13 @@ export function copyToClipboard(str) {
   navigator.clipboard.writeText(str);
 }
 
-export function createModelFileForDownload(str, tableName) {
+export function createModelFileForDownload(content, tableName) {
+  saveAsFileAndDownload(content, `${tableName}.vb`);
+}
+
+export function saveAsFileAndDownload(content, filename) {
   // create a new blob object with the contents of the file
-  var blob = new Blob([str], { type: 'text/plain;charset=utf-8' });
+  var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
 
   // create a new URL object for the blob
   var url = URL.createObjectURL(blob);
@@ -44,7 +48,7 @@ export function createModelFileForDownload(str, tableName) {
   // create a new anchor tag with the URL and filename
   var $link = $('<a>', {
     href: url,
-    download: `${tableName}.vb`,
+    download: filename,
   });
 
   // add the anchor tag to the document

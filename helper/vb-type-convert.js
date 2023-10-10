@@ -138,6 +138,11 @@ export function toVbPropertyName(dbColName) {
   dbColName = handleSpecialColName(dbColName);
   dbColName = snakeToPascalCase(dbColName);
 
+  // a rare case where property name is TableName, need to add underscore after it
+  if (dbColName === 'TableName') {
+    dbColName = 'TableName_';
+  }
+
   if (vbKeywords.includes(dbColName.toLowerCase())) {
     dbColName = `[${dbColName}]`;
   }
